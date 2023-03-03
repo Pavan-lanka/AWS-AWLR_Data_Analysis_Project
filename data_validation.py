@@ -6,6 +6,7 @@ import pandas as pd
 import meteostat as mt
 from datetime import datetime as dt
 
+
 class FetchData:
 
     def __init__(self, station_id: str, start_time: dt, end_time: dt, obs_frequency: str):
@@ -20,6 +21,8 @@ class FetchData:
         period is observation frequency for the observations. parameter only accepts string Ex. 'Monthly','Hourly','Daily'
         Example input: 
         FetchData('43128', dt(2022, 1, 1), dt(2022, 1, 1, 23, 59), 'daily')
+        # a = FetchData('43128', dt(2022, 1, 1), dt(2022, 1, 1, 23, 59), 'hourly')
+        # print(a.fetch_station_data())
         '''
 
     def fetch_station_data(self):
@@ -51,15 +54,14 @@ class FetchData:
 class CustomData:
     def __init__(self, PATH_TO_FILE):
         self.PATH_TO_FILE = PATH_TO_FILE
-
-    def custom_file_read(self, csvreader):
+    '''This method takes the '.CSV' file or File_Path as input parameter and returns DF from 
+    # a= CustomData('pa1.csv')
+    # a = a.custom_file_read()
+    # print(a)
+    '''
+    def custom_file_read(self):
         if self.PATH_TO_FILE[-4:] == '.csv':
-            csvreader = pd.read_csv(self.PATH_TO_FILE)
-            return csvreader
+            read_file = pd.read_csv(self.PATH_TO_FILE)
+            return read_file
         elif self.PATH_TO_FILE[-4:] != '.csv':
             return print('Please enter path to CSV file or a dataframe')
-
-
-class Station:
-    def __init__(self, ):
-
