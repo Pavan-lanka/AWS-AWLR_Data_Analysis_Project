@@ -2,25 +2,12 @@ from metpy.plots import *
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import matplotlib.lines as lines
-from metpy.units import units
 
 
 class StationModel:
     def __init__(self, sp=None, ax=None):
         self.sp = sp
         self.ax = ax
-
-    def plot_station_model(self):
-        fig, ax = plt.subplots(figsize=(10, 10))
-        self.ax.set_xlim(-8, 8)
-        self.ax.set_ylim(-8, 8)
-        self.sp = StationPlot(ax, 0, 0, fontsize=13, spacing=25)
-        self.ax.set_title('Station Model')
-        station_circle = patches.Circle((0, 0), radius=7, lw=1, edgecolor='k', facecolor='w')
-        self.ax.add_patch(station_circle)
-
-        return plt.show()
 
     def plot_temperature(self, temperature):
         # to plot temperature in station model
@@ -61,7 +48,7 @@ class StationModel:
         # to add sky_cover_of the lowest cloud to the model
         self.sp.plot_text((0, -4), text=[str(sky_cover_at_lowest_cloud)], fontsize=13)
 
-    def plot_cloud_text(self,cloud_height):
+    def plot_cloud_text(self, cloud_height):
         # to add height of the cloud base
         self.sp.plot_text((-2, -5.5), text=[str(cloud_height)], fontsize=13)
 
@@ -75,6 +62,7 @@ class StationModel:
 
     def plot_pressure_tendency(self, press_tend: dict, code):
         # to add pressure_tendency symbol to the model
+
         self.sp.plot_symbol((5, 0), codes=press_tend[code], symbol_mapper=pressure_tendency,
                             va='center', ha='center', fontsize=25)
 
@@ -103,8 +91,17 @@ class StationModel:
         self.sp.plot_symbol((2, -3.5), codes=past_weather[code], symbol_mapper=current_weather,
                             va='center', ha='center', fontsize=25)
 
-    def __main__(self):
-        pass
+    def plot_station_model(self, plot: dict):
+        fig, ax = plt.subplots(figsize=(10, 10))
+        self.ax.set_xlim(-8, 8)
+        self.ax.set_ylim(-8, 8)
+        self.sp = StationPlot(ax, 0, 0, fontsize=13, spacing=25)
+        self.ax.set_title('Station Model')
+        station_circle = patches.Circle((0, 0), radius=7, lw=1, edgecolor='k', facecolor='w')
+        self.ax.add_patch(station_circle)
+        plot = [self.plot_past_weather()]
+        return plt.show()
+
 # adding metpy logo at the corner
 # al = add_metpy_logo(fig=fig, x=8, y=8, zorder=5, size='small')
 
@@ -129,6 +126,3 @@ class StationModel:
 # pressure_difference = 15
 # precipitation = '.45'
 # sky_cover_at_lowest_cloud = 8
-
-a = StationModel()
-a.
