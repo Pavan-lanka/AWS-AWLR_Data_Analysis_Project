@@ -1,53 +1,47 @@
-import metpy.plots as plots
-from metpy.units import units
-import matplotlib.pyplot as plt
-import xarray as xr
-from metpy.io import *
-import pandas as pd
-import meteostat as mt
-from datetime import datetime as dt
-from metpy.cbook import get_test_data
+
+from dataclasses import dataclass
 
 
+@dataclass
 class FetchData:
+    station_id: str
+    path_to_file: str
+    '''FetchData Method takes Station_ID as String. ex:'12992'
+    start is Start time for accumulation of observations in dt format. ex_Input: dt(YYYY, MM, DD, HH, MM, SS)
+    end is End time range of the accumulation of data in dt format . dt(YYYY, MM, DD, HH, MM, SS) 
+                                                                    -> (2022,  1,  2, 23, 59)
+    period is observation frequency for the observations. parameter only accepts string, defaults to 'Hourly'
+    Ex. 'Monthly','Daily'
+    Example input:
+    # a = FetchData('43128')
+    # a = a.fetch_station_data(dt(2022, 1, 1), dt(2022, 1, 1, 23, 59), 'hourly')
+    '''
 
-    def __init__(self, station_id: str = None, path_to_file: str = None):
-        self.station_id = station_id
-        self.path_to_file = path_to_file
-
-        '''FetchData Method takes Station_ID as String. ex:'12992'
-        start is Start time for accumulation of observations in dt format. ex_Input: dt(YYYY, MM, DD, HH, MM, SS)
-        end is End time range of the accumulation of data in dt format . dt(YYYY, MM, DD, HH, MM, SS) 
-                                                                        -> (2022,  1,  2, 23, 59)
-        period is observation frequency for the observations. parameter only accepts string Ex. 'Monthly','Hourly','Daily'
-        Example input: 
-        FetchData('43128', dt(2022, 1, 1), dt(2022, 1, 1, 23, 59), 'daily')
-        # a = FetchData('43128')
-        # a = a.fetch_station_data(dt(2022, 1, 1), dt(2022, 1, 1, 23, 59), 'hourly')
-        '''
-
-    def fetch_station_data(self, start_time: dt, end_time: dt, obs_frequency: str):
+    def fetch_station_data(self, start_time: dt, end_time: dt, obs_frequency='hourly'):
         if obs_frequency.lower() == 'hourly':
             if start_time > end_time:
                 print('Enter Valid date time to fetch hourly data')
             else:
                 data = mt.Hourly(self.station_id, start_time, end_time)
                 data = data.fetch()
-                return data
+                parameters = list(data.columns.values)
+                return data, parameters
         elif obs_frequency.lower() == 'daily':
             if start_time > end_time or start_time == end_time:
                 print('Enter Valid days for fetching Daily data')
             else:
                 data = mt.Daily(self.station_id, start_time, end_time)
                 data = data.fetch()
-                return data
+                parameters = list(data.columns.values)
+                return data, parameters
         elif obs_frequency.lower() == 'monthly':
             if start_time > end_time or start_time == end_time:
                 print('Enter Valid months in Date,Time for fetching monthly data')
             else:
                 data = mt.Monthly(self.station_id, start_time, end_time)
                 data = data.fetch()
-                return data
+                parameters = list(data.columns.values)
+                return data, parameters
         else:
             return print('The data period frequency is not valid')
 
@@ -59,13 +53,12 @@ class FetchData:
         """
         if self.path_to_file[-4:] == '.csv':
             data = pd.read_csv(self.path_to_file)
-            return data
-        elif self.path_to_file[-4:] == '.txt' and self.path_to_file[:5].lower() == 'metar':
+            parameters = list(data.columns.values)
+            return data,parameters
+        elif self.path_to_file[-4:] == '.txt':
             data = parse_metar_to_dataframe(filename=self.path_to_file)
-            return data
-        elif self.path_to_file[-3:] == '.nc':
-            data = xr.open_dataset(self.path_to_file).parse_cf()
-            return data
+            parameters = list(data.columns.values)
+            return data, parameters
 
 # class Parameters:
 #
@@ -94,8 +87,6 @@ class FetchData:
 #             'VISIBILITY_DISTANCE': 'visibility_distance',
 #             'PRESENT_WEATHER': 'present_weather',
 #             'PAST_WEATHER': 'past_weather',
-#             'PRESSURE_TENDENCY': 'press_tendency',
-#             'PRESSURE_CHANGE': 'pressure_change',
 #             'PRESSURE_DIFFERENCE': 'pressure_difference',
 #             'PRECIPITATION': 'precipitation',
 #             'SKY_COVER_AT_LOWEST_CLOUD': 'sky_cover_at_lowest_cloud',
