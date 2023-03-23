@@ -11,8 +11,8 @@ from dataclasses import dataclass
 
 @dataclass
 class FetchData:
-    station_id: str
-    path_to_file: str
+    station_id: str = None
+    path_to_file: str = None
     '''FetchData Method takes Station_ID as String. ex:'12992'
     start is Start time for accumulation of observations in dt format. ex_Input: dt(YYYY, MM, DD, HH, MM, SS)
     end is End time range of the accumulation of data in dt format . dt(YYYY, MM, DD, HH, MM, SS) 
@@ -63,32 +63,48 @@ class FetchData:
             d_parameters = list(data.columns.values)
             return data, d_parameters
         elif self.path_to_file[-4:] == '.txt':
-            data = parse_metar_to_dataframe(filename=self.path_to_file)
+            data = parse_metar_file(filename=self.path_to_file)
             d_parameters = list(data.columns.values)
             return data, d_parameters
 
-    def parameters_validation(self):
-        parameters = {
-            'temperature': ('Temperature', 'TEMPERATURE', 'tmpt', 'air_temperature', 'temp', 'tmpf', 'tmpc'),
-            'dew_point_temperature': ('Dew_Point_Temperature', 'DEW_POINT_TEMPERATURE', 'dwpt', 'dwpc',
-                                      'dew_temp', 'dwpf'),
-            'wind_speed': ('WIND_SPEED',''),
-            'wind_direction': None,
-            'cloud_height': None,
-            'pressure': None,
-            'high_cloud': None,
-            'mid_cloud': None,
-            'low_cloud': None,
-            'sky_cover': None,
-            'visibility_distance': None,
-            'present_weather': None,
-            'past_weather': None,
-            'pressure_tendency': None,
-            'pressure_change': None,
-            'pressure_difference': None,
-            'precipitation': None,
-            'sky_cover_at_lowest_cloud': None
-        }
+        def parameter_validation(self):
+            a, b = FetchData.custom_file_read(self)
+            parameters = {
+                'temperature': ('Temperature', 'TEMPERATURE', 'tmpt', 'air_temperature', 'temp', 'tmpf', 'tmpc'),
+                'dew_point_temperature': ('Dew_Point_Temperature', 'DEW_POINT_TEMPERATURE', 'dwpt', 'dwpc',
+                                          'dew_temp', 'dwpf'),
+                'wind_speed': ('WIND_SPEED','wspd', 'sknt', 'Wind_Speed'),
+                'wind_direction': ('WIND_DIRECTION', 'Wind_Direction', 'drct', 'wdir'),
+                'cloud_height': ('skyl3','highest_cloud_level', 'high_cloud_level',
+                                 'medium_cloud_level', 'low_cloud_level'),
+                'pressure': ('PRESSURE', 'pres', 'mslp', 'atmospheric_pressure', 'air_pressure_at_sea_level'),
+                'high_cloud': ('high_cloud_type', 'skyc3', ),
+                'mid_cloud': ('mid_cloud_type', 'skyc2'),
+                'low_cloud': ('low_cloud_type', 'skyc1', ),
+                'sky_cover': ('cloud_coverage', 'skyc1', ),
+                'visibility_distance': ('visibility', 'vsby', ),
+                'present_weather': ('coco', 'current_weather', 'wxcodes', 'current_wx1', ),
+                # 'past_weather': None,
+                # 'pressure_tendency': None,
+                # 'pressure_change': None,
+                # 'pressure_difference': None,
+                'precipitation': ('p01i', 'prcp', ''),
+                'sky_cover_at_lowest_cloud': ('low_cloud_level', 'skyl1')
+            }
+            for par in b:
+                for i in range(len(parameters)):
+                    if par in parameters[i]:
+                        parameters[i] = par
+                    elif par not in parameters[i]:
+                        continue
+            return parameters
+        return parameter_validation()
+
+a= FetchData(path_to_file=r"C:\Users\Pavan Koundinya\Desktop\metar_vij.txt")
+a,b = a.custom_file_read()
+an = list(a.columns.values)
+print(an)
+
 
 @dataclass()
 class StationModel:
@@ -152,11 +168,17 @@ class StationModel:
         # to add pressure_difference to the model
         self.sp.plot_text((4, 0), text=[str(self.data['pressure_difference'])], fontsize=13)
 
+    def plot_pressure_tendency(self):
+        # to add pressure_tendency symbol to the model
+
+        self.sp.plot_symbol((5, 0), codes=[self.data['pressure_tendency']], symbol_mapper=pressure_tendency,
+                            va='center', ha='center', fontsize=25)
+
     def plot_sky_cover_at_lowest_cloud(self):
         # to add sky_cover_of the lowest cloud to the model
         self.sp.plot_text((0, -4), text=[str(self.data['sky_cover_at_lowest_cloud'])], fontsize=13)
 
-    def plot_cloud_text(self):
+    def plot_cloud_height(self):
         # to add height of the cloud base
         self.sp.plot_text((-2, -5.5), text=[str(self.data['cloud_height'])], fontsize=13)
 
@@ -166,13 +188,9 @@ class StationModel:
 
     def plot_sky_cover(self):
         # to add Sky_cover symbol to the model
+
         self.sp.plot_symbol((0, 0), codes=[self.data['sky_cover']], symbol_mapper=sky_cover, fontsize=25)
 
-    def plot_pressure_tendency(self):
-        # to add pressure_tendency symbol to the model
-
-        self.sp.plot_symbol((5, 0), codes=[self.data['pressure_tendency']], symbol_mapper=pressure_tendency,
-                            va='center', ha='center', fontsize=25)
 
     def plot_low_clouds(self):
         # to add low_clouds symbol to the model
@@ -207,7 +225,23 @@ class StationModel:
         self.ax.set_title('Station Model')
         station_circle = patches.Circle((0, 0), radius=7, lw=1, edgecolor='k', facecolor='w')
         self.ax.add_patch(station_circle)
-        plot = [self.plot_past_weather()]
+        self.plot_pressure_tendency()
+        self.plot_sky_cover()
+        self.plot_pressure()
+        self.plot_barb()
+        self.plot_cloud_height()
+        self.plot_dew_point_temperature()
+        self.plot_high_clouds()
+        self.plot_low_clouds()
+        self.plot_mid_clouds()
+        self.plot_past_weather()
+        self.plot_precipitation()
+        self.plot_present_weather()
+        self.plot_pressure_change()
+        self.plot_pressure_difference()
+        self.plot_sky_cover_at_lowest_cloud()
+        self.plot_temperature()
+        self.plot_visibility_distance()
         return plt.show()
 
 
