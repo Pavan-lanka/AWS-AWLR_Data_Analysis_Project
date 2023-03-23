@@ -2,93 +2,201 @@ from metpy.plots import *
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+from metpy.io import *
+import pandas as pd
+import meteostat as mt
+from datetime import datetime as dt
+from dataclasses import dataclass
 
 
+@dataclass
+class FetchData:
+    station_id: str
+    path_to_file: str
+    '''FetchData Method takes Station_ID as String. ex:'12992'
+    start is Start time for accumulation of observations in dt format. ex_Input: dt(YYYY, MM, DD, HH, MM, SS)
+    end is End time range of the accumulation of data in dt format . dt(YYYY, MM, DD, HH, MM, SS) 
+                                                                    -> (2022,  1,  2, 23, 59)
+    period is observation frequency for the observations. parameter only accepts string, defaults to 'Hourly'
+    Ex. 'Monthly','Daily'
+    Example input:
+    # a = FetchData('43128')
+    # a = a.fetch_station_data(dt(2022, 1, 1), dt(2022, 1, 1, 23, 59), 'hourly')
+    '''
+
+    def fetch_station_data(self, start_time: dt, end_time: dt, obs_frequency='hourly'):
+        if obs_frequency.lower() == 'hourly':
+            if start_time > end_time:
+                print('Enter Valid date time to fetch hourly data')
+            else:
+                data = mt.Hourly(self.station_id, start_time, end_time)
+                data = data.fetch()
+                parameters = list(data.columns.values)
+                return data, parameters
+        elif obs_frequency.lower() == 'daily':
+            if start_time > end_time or start_time == end_time:
+                print('Enter Valid days for fetching Daily data')
+            else:
+                data = mt.Daily(self.station_id, start_time, end_time)
+                data = data.fetch()
+                parameters = list(data.columns.values)
+                return data, parameters
+        elif obs_frequency.lower() == 'monthly':
+            if start_time > end_time or start_time == end_time:
+                print('Enter Valid months in Date,Time for fetching monthly data')
+            else:
+                data = mt.Monthly(self.station_id, start_time, end_time)
+                data = data.fetch()
+                parameters = list(data.columns.values)
+                return data, parameters
+        else:
+            return print('The data period frequency is not valid')
+
+    def custom_file_read(self):
+        """This method takes the '.CSV' file or File_Path as input parameter and returns DF from
+        # a= CustomData('pa1.csv')
+        # a = a.custom_file_read()
+        # print(a)
+        """
+        if self.path_to_file[-4:] == '.csv':
+            data = pd.read_csv(self.path_to_file)
+            parameters = list(data.columns.values)
+            return data, parameters
+        elif self.path_to_file[-4:] == '.txt':
+            data = parse_metar_to_dataframe(filename=self.path_to_file)
+            parameters = list(data.columns.values)
+            return data, parameters
+
+    def parameters_validation(self):
+        parameters = {
+            'temperature': ('Temperature', 'TEMPERATURE', 'tmpt', 'air_temperature', 'temp', 'tmpf', 'tmpc'),
+            'dew_point_temperature': ('Dew_Point_Temperature', 'DEW_POINT_TEMPERATURE', 'dwpt', 'dwpc',
+                                      'dew_temp', 'dwpf'),
+            'wind_speed': ('WIND_SPEED',''),
+            'wind_direction': None,
+            'cloud_height': None,
+            'pressure': None,
+            'high_cloud': None,
+            'mid_cloud': None,
+            'low_cloud': None,
+            'sky_cover': None,
+            'visibility_distance': None,
+            'present_weather': None,
+            'past_weather': None,
+            'pressure_tendency': None,
+            'pressure_change': None,
+            'pressure_difference': None,
+            'precipitation': None,
+            'sky_cover_at_lowest_cloud': None
+        }
+
+@dataclass()
 class StationModel:
-    def __init__(self, sp=None, ax=None):
-        self.sp = sp
-        self.ax = ax
+    sp = None
+    ax = None
+    data = {
+        'temperature': None,
+        'dew_point_temperature': None,
+        'wind_speed': None,
+        'wind_direction': None,
+        'cloud_height': None,
+        'pressure': None,
+        'high_cloud': None,
+        'mid_cloud': None,
+        'low_cloud': None,
+        'sky_cover': None,
+        'visibility_distance': None,
+        'present_weather': None,
+        'past_weather': None,
+        'pressure_tendency': None,
+        'pressure_change': None,
+        'pressure_difference': None,
+        'precipitation': None,
+        'sky_cover_at_lowest_cloud': None
+    }
 
-    def plot_temperature(self, temperature):
+    def plot_temperature(self):
         # to plot temperature in station model
-        self.sp.plot_text((-4, 3), text=[str(temperature) + '°C'], fontsize=13)
+        self.sp.plot_text((-4, 3), text=[str(self.data['temperature']) + '°C'], fontsize=13)
 
-    def plot_dew_point(self, dew_point):
+    def plot_dew_point_temperature(self):
         # to add dew_point to the model
-        self.sp.plot_text((-4, 3), text=[str(dew_point) + '°C'], fontsize=13)
+        self.sp.plot_text((-4, 3), text=[str(self.data['dew_point_temperature']) + '°C'], fontsize=13)
 
-    def plot_visibility(self, visibility_distance):
+    def plot_visibility_distance(self):
         # to add visibility_distance to the model
-        self.sp.plot_text((-6, 0), text=[str(visibility_distance) + 'miles'], fontsize=13)
+        self.sp.plot_text((-6, 0), text=[str(self.data['visibility_distance']) + 'miles'], fontsize=13)
 
-    def plot_barb(self, wind_speed, wind_direction):
+    def plot_barb(self):
         # to position wind-barb in the center of the model
         # u = -wind_speed * np.sin(np.radians(wind_direction))
         # v = -wspd_mps * math.cos(np.radians(wind_direction))
-        self.sp.plot_barb(u=[-wind_speed * np.sin(np.radians(wind_direction))],
-                          v=[-wind_speed * np.cos(np.radians(wind_direction))], length=11)
+        self.sp.plot_barb(u=[-(self.data['wind_speed']) * np.sin(np.radians(self.data['wind_direction']))],
+                          v=[-(self.data['wind_speed']) * np.cos(np.radians(self.data['wind_direction']))], length=11)
 
         # to add wind speed in knots at the end of the barb
-        self.ax.text(1.5 * np.sin(np.radians(wind_direction)), 1.5 * np.cos(np.radians(wind_direction)),
-                     str(wind_speed) + ' kts', ha='center', va='bottom', rotation=0, fontsize=10, alpha=0.3)
+        self.ax.text(1.5 * np.sin(np.radians(self.data['wind_direction'])),
+                     1.5 * np.cos(np.radians(self.data['wind_direction'])),
+                     str(self.data['wind_speed']) + ' kts',
+                     ha='center', va='bottom', rotation=0, fontsize=10, alpha=0.3)
 
-    def plot_pressure(self, pressure):
+    def plot_pressure(self):
         # to add pressure to the model
-        self.sp.plot_text((4, 3), text=[str(pressure) + ' hPa'], fontsize=13)
+        self.sp.plot_text((4, 3), text=[str(self.data['pressure']) + ' hPa'], fontsize=13)
 
-    def plot_pressure_change(self, press_change):
+    def plot_pressure_change(self):
         # to add pressure_change to the model
-        self.sp.plot_text((3.2, 0), text=[str(press_change)], fontsize=13)
+        self.sp.plot_text((3.2, 0), text=[str(self.data['pressure_change'])], fontsize=13)
 
-    def plot_pressure_difference(self, pressure_difference):
+    def plot_pressure_difference(self):
         # to add pressure_difference to the model
-        self.sp.plot_text((4, 0), text=[str(pressure_difference)], fontsize=13)
+        self.sp.plot_text((4, 0), text=[str(self.data['pressure_difference'])], fontsize=13)
 
-    def plot_sky_cover_at_lowest_cloud(self, sky_cover_at_lowest_cloud):
+    def plot_sky_cover_at_lowest_cloud(self):
         # to add sky_cover_of the lowest cloud to the model
-        self.sp.plot_text((0, -4), text=[str(sky_cover_at_lowest_cloud)], fontsize=13)
+        self.sp.plot_text((0, -4), text=[str(self.data['sky_cover_at_lowest_cloud'])], fontsize=13)
 
-    def plot_cloud_text(self, cloud_height):
+    def plot_cloud_text(self):
         # to add height of the cloud base
-        self.sp.plot_text((-2, -5.5), text=[str(cloud_height)], fontsize=13)
+        self.sp.plot_text((-2, -5.5), text=[str(self.data['cloud_height'])], fontsize=13)
 
-    def plot_precipitation(self, precipitation):
+    def plot_precipitation(self):
         # to add precipitation to the model
-        self.sp.plot_text((2, -5.5), text=[str(precipitation)], fontsize=13)
+        self.sp.plot_text((2, -5.5), text=[str(self.data['precipitation'])], fontsize=13)
 
-    def plot_sky_cover(self, sky_covered: dict, code):
+    def plot_sky_cover(self):
         # to add Sky_cover symbol to the model
-        self.sp.plot_symbol((0, 0), codes=sky_covered[code], symbol_mapper=sky_cover, fontsize=25)
+        self.sp.plot_symbol((0, 0), codes=[self.data['sky_cover']], symbol_mapper=sky_cover, fontsize=25)
 
-    def plot_pressure_tendency(self, press_tend: dict, code):
+    def plot_pressure_tendency(self):
         # to add pressure_tendency symbol to the model
 
-        self.sp.plot_symbol((5, 0), codes=press_tend[code], symbol_mapper=pressure_tendency,
+        self.sp.plot_symbol((5, 0), codes=[self.data['pressure_tendency']], symbol_mapper=pressure_tendency,
                             va='center', ha='center', fontsize=25)
 
-    def plot_low_clouds(self, low_cloud: dict, code):
+    def plot_low_clouds(self):
         # to add low_clouds symbol to the model
-        self.sp.plot_symbol((-2, -3.5), codes=low_cloud[code], symbol_mapper=low_clouds,
+        self.sp.plot_symbol((-2, -3.5), codes=[self.data['low_cloud']], symbol_mapper=low_clouds,
                             va='center', ha='center', fontsize=25)
 
-    def plot_mid_clouds(self, mid_cloud: dict, code):
+    def plot_mid_clouds(self):
         # to add mid_clouds symbol to the model
-        self.sp.plot_symbol((2, 3), codes=mid_cloud[code], symbol_mapper=mid_clouds,
+        self.sp.plot_symbol((2, 3), codes=[self.data['mid_cloud']], symbol_mapper=mid_clouds,
                             va='center', ha='center', fontsize=25)
 
-    def plot_high_clouds(self, high_cloud: dict, code):
+    def plot_high_clouds(self):
         # to add high_clouds symbol to the model
-        self.sp.plot_symbol((1, 5), codes=high_cloud[code], symbol_mapper=high_clouds,
+        self.sp.plot_symbol((1, 5), codes=[self.data['high_cloud']], symbol_mapper=high_clouds,
                             va='center', ha='center', fontsize=25)
 
-    def plot_present_weather(self, present_weather: dict, code):
+    def plot_present_weather(self):
         # to add present_weather symbol to the model
-        self.sp.plot_symbol((-4, 0), codes=present_weather[code], symbol_mapper=current_weather,
+        self.sp.plot_symbol((-4, 0), codes=wx_code_map[self.data['present_weather']], symbol_mapper=current_weather,
                             va='center', ha='center', fontsize=25)
 
-    def plot_past_weather(self, past_weather: dict, code):
+    def plot_past_weather(self):
         # to add past_weather symbol to the model
-        self.sp.plot_symbol((2, -3.5), codes=past_weather[code], symbol_mapper=current_weather,
+        self.sp.plot_symbol((2, -3.5), codes=wx_code_map[self.data['past_weather']], symbol_mapper=current_weather,
                             va='center', ha='center', fontsize=25)
 
     def plot_station_model(self, plot: dict):
@@ -102,27 +210,8 @@ class StationModel:
         plot = [self.plot_past_weather()]
         return plt.show()
 
+
 # adding metpy logo at the corner
 # al = add_metpy_logo(fig=fig, x=8, y=8, zorder=5, size='small')
 
 # plt.grid()
-
-# Define some sample data
-# temperature = 15.6
-# dewpoint = 10.2
-# wind_speed = 200
-# wind_direction = 30
-# pressure = 1010
-# cloud_height = 5
-# high_cloud = ''
-# mid_cloud = ''
-# low_cloud = ''
-# sky_covered = ''
-# visibility_distance = 0.5
-# present_weather = ''
-# past_weather = ''
-# press_tend = ''
-# press_change = '+'
-# pressure_difference = 15
-# precipitation = '.45'
-# sky_cover_at_lowest_cloud = 8
