@@ -26,29 +26,29 @@ class FetchData:
 
     def fetch_station_data(self, start_time: dt, end_time: dt, obs_frequency='hourly'):
         if obs_frequency.lower() == 'hourly':
-            if start_time > end_time:
+            if start_time >= end_time:
                 print('Enter Valid date time to fetch hourly data')
             else:
                 data = mt.Hourly(self.station_id, start_time, end_time)
                 data = data.fetch()
-                parameters = list(data.columns.values)
-                return data, parameters
+                d_parameters = list(data.columns.values)
+                return data, d_parameters
         elif obs_frequency.lower() == 'daily':
-            if start_time > end_time or start_time == end_time:
+            if start_time >= end_time:
                 print('Enter Valid days for fetching Daily data')
             else:
                 data = mt.Daily(self.station_id, start_time, end_time)
                 data = data.fetch()
-                parameters = list(data.columns.values)
-                return data, parameters
+                d_parameters = list(data.columns.values)
+                return data, d_parameters
         elif obs_frequency.lower() == 'monthly':
-            if start_time > end_time or start_time == end_time:
+            if start_time >= end_time:
                 print('Enter Valid months in Date,Time for fetching monthly data')
             else:
                 data = mt.Monthly(self.station_id, start_time, end_time)
                 data = data.fetch()
-                parameters = list(data.columns.values)
-                return data, parameters
+                d_parameters = list(data.columns.values)
+                return data, d_parameters
         else:
             return print('The data period frequency is not valid')
 
@@ -60,12 +60,12 @@ class FetchData:
         """
         if self.path_to_file[-4:] == '.csv':
             data = pd.read_csv(self.path_to_file)
-            parameters = list(data.columns.values)
-            return data, parameters
+            d_parameters = list(data.columns.values)
+            return data, d_parameters
         elif self.path_to_file[-4:] == '.txt':
             data = parse_metar_to_dataframe(filename=self.path_to_file)
-            parameters = list(data.columns.values)
-            return data, parameters
+            d_parameters = list(data.columns.values)
+            return data, d_parameters
 
     def parameters_validation(self):
         parameters = {
