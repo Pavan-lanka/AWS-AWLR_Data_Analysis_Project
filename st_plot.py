@@ -1,5 +1,5 @@
 from metpy.plots import *
-import numpy as np
+# import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from metpy.io import *
@@ -7,6 +7,15 @@ import pandas as pd
 import meteostat as mt
 from datetime import datetime as dt
 from dataclasses import dataclass
+
+
+@dataclass()
+class DatetimeToPlot:
+    date_and_time: str = None  # str format should be of "YYYY-MM-DD HH:MM"
+
+    def date_time_for_model(self):
+        self.date_and_time = str(input("Enter Date and time to plot the Station Model"))
+        pass
 
 
 @dataclass
@@ -62,48 +71,54 @@ class FetchData:
             data = pd.read_csv(self.path_to_file)
             d_parameters = list(data.columns.values)
             return data, d_parameters
-        elif self.path_to_file[-4:] == '.txt':
+        elif '.txt' in self.path_to_file[-4:]:
             data = parse_metar_file(filename=self.path_to_file)
             d_parameters = list(data.columns.values)
             return data, d_parameters
+        elif self.path_to_file[-4:] == '.xml':
+            data = pd.read_xml(path_or_buffer=self.path_to_file)
+            d_parameters = list(data.columns.values)
+            return data, d_parameters
+        elif '.nc' in self.path_to_file[-4:]:
+            data = xr.open_dataset(filename_or_obj=self.path_to_file)
+            d_parameters = list()
+            return data,
 
-        def parameter_validation(self):
-            a, b = FetchData.custom_file_read(self)
-            parameters = {
-                'temperature': ('Temperature', 'TEMPERATURE', 'tmpt', 'air_temperature', 'temp', 'tmpf', 'tmpc'),
-                'dew_point_temperature': ('Dew_Point_Temperature', 'DEW_POINT_TEMPERATURE', 'dwpt', 'dwpc',
-                                          'dew_temp', 'dwpf'),
-                'wind_speed': ('WIND_SPEED','wspd', 'sknt', 'Wind_Speed'),
-                'wind_direction': ('WIND_DIRECTION', 'Wind_Direction', 'drct', 'wdir'),
-                'cloud_height': ('skyl3','highest_cloud_level', 'high_cloud_level',
-                                 'medium_cloud_level', 'low_cloud_level'),
-                'pressure': ('PRESSURE', 'pres', 'mslp', 'atmospheric_pressure', 'air_pressure_at_sea_level'),
-                'high_cloud': ('high_cloud_type', 'skyc3', ),
-                'mid_cloud': ('mid_cloud_type', 'skyc2'),
-                'low_cloud': ('low_cloud_type', 'skyc1', ),
-                'sky_cover': ('cloud_coverage', 'skyc1', ),
-                'visibility_distance': ('visibility', 'vsby', ),
-                'present_weather': ('coco', 'current_weather', 'wxcodes', 'current_wx1', ),
-                # 'past_weather': None,
-                # 'pressure_tendency': None,
-                # 'pressure_change': None,
-                # 'pressure_difference': None,
-                'precipitation': ('p01i', 'prcp', ''),
-                'sky_cover_at_lowest_cloud': ('low_cloud_level', 'skyl1')
-            }
-            for par in b:
-                for i in range(len(parameters)):
-                    if par in parameters[i]:
-                        parameters[i] = par
-                    elif par not in parameters[i]:
-                        continue
-            return parameters
-        return parameter_validation()
+    def parameter_validation(self):
+        a, b = FetchData.custom_file_read(self)
+        parameters = {
+            'temperature': ('Temperature', 'TEMPERATURE', 'tmpt', 'air_temperature', 'temp', 'tmpf', 'tmpc'),
+            'dew_point_temperature': ('Dew_Point_Temperature', 'DEW_POINT_TEMPERATURE', 'dwpt', 'dwpc',
+                                      'dew_temp', 'dwpf'),
+            'wind_speed': ('WIND_SPEED', 'wspd', 'sknt', 'Wind_Speed'),
+            'wind_direction': ('WIND_DIRECTION', 'Wind_Direction', 'drct', 'wdir'),
+            'cloud_height': ('skyl3', 'highest_cloud_level', 'high_cloud_level',
+                             'medium_cloud_level', 'low_cloud_level'),
+            'pressure': ('PRESSURE', 'pres', 'mslp', 'atmospheric_pressure', 'air_pressure_at_sea_level'),
+            'high_cloud': ('high_cloud_type', 'skyc3',),
+            'mid_cloud': ('mid_cloud_type', 'skyc2'),
+            'low_cloud': ('low_cloud_type', 'skyc1',),
+            'sky_cover': ('cloud_coverage', 'skyc1',),
+            'visibility_distance': ('visibility', 'vsby',),
+            'present_weather': ('coco', 'current_weather', 'wxcodes', 'current_wx1',),
+            # 'past_weather': None,
+            # 'pressure_tendency': None,
+            # 'pressure_change': None,
+            # 'pressure_difference': None,
+            'precipitation': ('p01i', 'prcp', ''),
+            'sky_cover_at_lowest_cloud': ('low_cloud_level', 'skyl1')
+        }
+        for key, tuple_keys in parameters:
+            for i in range(len(b)):
+                if b[i] in (*tuple_keys):
 
-a= FetchData(path_to_file=r"C:\Users\Pavan Koundinya\Desktop\metar_vij.txt")
-a,b = a.custom_file_read()
-an = list(a.columns.values)
-print(an)
+
+
+
+# a = FetchData(path_to_file=r"C:\Users\Pavan Koundinya\Desktop\metar_vij.txt")
+# a, b = a.custom_file_read()
+# an = list(a.columns.values)
+# print(an)
 
 
 @dataclass()
@@ -191,7 +206,6 @@ class StationModel:
 
         self.sp.plot_symbol((0, 0), codes=[self.data['sky_cover']], symbol_mapper=sky_cover, fontsize=25)
 
-
     def plot_low_clouds(self):
         # to add low_clouds symbol to the model
         self.sp.plot_symbol((-2, -3.5), codes=[self.data['low_cloud']], symbol_mapper=low_clouds,
@@ -217,7 +231,7 @@ class StationModel:
         self.sp.plot_symbol((2, -3.5), codes=wx_code_map[self.data['past_weather']], symbol_mapper=current_weather,
                             va='center', ha='center', fontsize=25)
 
-    def plot_station_model(self, plot: dict):
+    def plot_station_model(self):
         fig, ax = plt.subplots(figsize=(10, 10))
         self.ax.set_xlim(-8, 8)
         self.ax.set_ylim(-8, 8)
@@ -243,7 +257,6 @@ class StationModel:
         self.plot_temperature()
         self.plot_visibility_distance()
         return plt.show()
-
 
 # adding metpy logo at the corner
 # al = add_metpy_logo(fig=fig, x=8, y=8, zorder=5, size='small')
