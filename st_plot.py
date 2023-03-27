@@ -1,5 +1,6 @@
 from metpy.plots import *
-# import numpy as np
+import numpy as np
+import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from metpy.io import *
@@ -7,18 +8,7 @@ import pandas as pd
 import meteostat as mt
 from datetime import datetime as dt
 from dataclasses import dataclass
-
-
-@dataclass
-class DatetimeToPlot:
-    # str format should be of "YYYY-MM-DD HH:MM"
-    date = input("Enter Date to plot the Station Model")
-    month = input("Enter month to plot the Station Model")
-    year = input("Enter year to plot the Station Model")
-    hour = input("Enter Hour to plot the Station Model")
-    minute = input("Enter Minute to plot the Station Model")
-
-
+import metpy
 
 
 @dataclass
@@ -82,19 +72,26 @@ class FetchData:
             data = pd.read_xml(path_or_buffer=self.path_to_file)
             d_parameters = list(data.columns.values)
             return data, d_parameters
+        elif self.path_to_file[-3:] == '.cn':
+            data = xr.open_dataset(filename_or_obj=self.path_to_file, engine="netcdf4")
+            data = data.metpy.parse_cf()
+            data = data.to_dataframe()
+            data = data.reset_index()
+            d_parameters = list(data.columns.values)
+            return data, d_parameters
         else:
-            print('File Format should be a .csv, .txt or and .xml file')
+            print('File Format should be a .csv, .txt, .cn(X-array Dataset) or .xml file')
 
     @staticmethod
-    def get_input(self):
-        timestamp_str = input("Enter a timestamp in the format 'YYYY-MM-DD HH:MM:SS': ")
-        timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S')
-        return timestamp
+    def get_input():
+        ts_str = input("Enter a timestamp in the format 'YYYY-MM-DD HH:MM:SS': ")
+        ts = datetime.strptime(ts_str, '%Y-%m-%d %H:%M:%S')
+        return ts
 
-
-    def parameter_validation(self):
-        a, b = FetchData.custom_file_read(self)
-        parameters = {
+    @staticmethod
+    def param_data_validation(self, a, b=custom_file_read(), ip = get_input()):
+        parameter_abbreviations = {
+            'station_id':['Station_ID','station', 'station_id' ],
             'date_time': ['valid', 'time', 'date_time'],
 
             'temperature': ['Temperature', 'TEMPERATURE', 'tmpt', 'air_temperature',
@@ -120,15 +117,13 @@ class FetchData:
             'sky_cover_at_lowest_cloud': ['low_cloud_level', 'skyl1',
                                           'SKY_COVER_AT_LOWEST_CLOUD', 'sky_cover_at_lowest_cloud']
         }
+        data = {}
         for i in range(len(b)):
-            for key, tuple_keys in parameters:
-                if b[i] in key:
-                    parameters[key] = b[i]
-                elif b[i] not in key:
-
-
-
-
+            for key, tuple_keys in parameter_abbreviations:
+                if b[i] in parameter_abbreviations:
+                    data[b[i]] = a.
+                elif b[i] not in parameter_abbreviations:
+                    for j in tuple_keys:
 
 
 

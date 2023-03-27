@@ -45,8 +45,3 @@ PRESSURE_CHANGE = 'pressure_change'
 PRESSURE_DIFFERENCE = 'pressure_difference'
 PRECIPITATION = 'precipitation'
 SKY_COVER_AT_LOWEST_CLOUD = 'sky_cover_at_lowest_cloud'
-
-
-REQUIRED_PARAMETERS = [TEMPERATURE, WIND_SPEED, WIND_DIRECTION,
-                       PRESSURE, PRESENT_WEATHER, START_TIME,
-                       END_TIME, OBS_FREQUENCY, STATION_ID]
