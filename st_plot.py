@@ -15,6 +15,7 @@ import metpy
 class FetchData:
     station_id: str = None
     path_to_file: str = None
+
     '''FetchData Method takes Station_ID as String. ex:'12992'
     start is Start time for accumulation of observations in dt format. ex_Input: dt(YYYY, MM, DD, HH, MM, SS)
     end is End time range of the accumulation of data in dt format . dt(YYYY, MM, DD, HH, MM, SS) 
@@ -72,30 +73,32 @@ class FetchData:
             data = pd.read_xml(path_or_buffer=self.path_to_file)
             d_parameters = list(data.columns.values)
             return data, d_parameters
-        elif self.path_to_file[-3:] == '.cn':
+        elif self.path_to_file[-3:] == '.nc':
             data = xr.open_dataset(filename_or_obj=self.path_to_file, engine="netcdf4")
             data = data.metpy.parse_cf()
             data = data.to_dataframe()
             data = data.reset_index()
             d_parameters = list(data.columns.values)
             return data, d_parameters
-        else:
-            print('File Format should be a .csv, .txt, .cn(X-array Dataset) or .xml file')
+        elif not self.path_to_file[-4:] in ['.txt', '.nc', '.xml', '.csv']:
+            raise RuntimeError ('File Format should be a .csv, .txt, .cn or .xml file')
 
     @staticmethod
-    def get_input():
+    def get_input_data(self):
         ts_str = input("Enter a timestamp in the format 'YYYY-MM-DD HH:MM:SS': ")
         ts = datetime.strptime(ts_str, '%Y-%m-%d %H:%M:%S')
         return ts
 
     @staticmethod
-    def param_data_validation(self, a, b=custom_file_read(), ip = get_input()):
+    def param_data_validation(self):
+        a, b = FetchData.custom_file_read()
+        ip = FetchData.get_input_data()
         parameter_abbreviations = {
             'station_id':['Station_ID','station', 'station_id' ],
-            'date_time': ['valid', 'time', 'date_time'],
+            'date_time': ['valid', 'time', 'date_time', 'time1', 'time_stamp', 'DATE_TIME'],
 
             'temperature': ['Temperature', 'TEMPERATURE', 'tmpt', 'air_temperature',
-                            'temp', 'tmpf', 'tmpc', 'temperature'],
+                            'temp', 'tmpf', 'tmpc', 'temperature', 'tavg'],
             'dew_point_temperature': ['Dew_Point_Temperature', 'DEW_POINT_TEMPERATURE', 'dwpt', 'dwpc',
                                       'dew_temp', 'dwpf', 'dew_point_temperature'],
             'wind_speed': ['WIND_SPEED', 'wspd', 'sknt', 'Wind_Speed', 'wind_speed'],
@@ -117,13 +120,24 @@ class FetchData:
             'sky_cover_at_lowest_cloud': ['low_cloud_level', 'skyl1',
                                           'SKY_COVER_AT_LOWEST_CLOUD', 'sky_cover_at_lowest_cloud']
         }
-        data = {}
+        data_to_plot = {
+
+        }
         for i in range(len(b)):
-            for key, tuple_keys in parameter_abbreviations:
-                if b[i] in parameter_abbreviations:
-                    data[b[i]] = a.
-                elif b[i] not in parameter_abbreviations:
-                    for j in tuple_keys:
+            if b[i] in parameter_abbreviations['date_time']:
+                if ip in a[b[i]]:
+                    c = a.loc[a[b[i]] == ip]
+                    c = c.squeeze()
+                    data_to_plot = c.to_dict()
+                else:
+                    print(f"Entered TimeStamp doesn't exist in the {self.path}")
+
+            else:
+                for key, val in parameter_abbreviations:
+                    if b[i] in parameter_abbreviations:
+                        data_to_plot[b[i]] = a.
+                    elif b[i] not in parameter_abbreviations:
+                        for j in val:
 
 
 
@@ -135,9 +149,14 @@ class FetchData:
 
 
 @dataclass()
-class StationModel:
-    sp = None
-    ax = None
+class StationModel(FetchData):
+    fig, ax = plt.subplots(figsize=(10, 10))
+    sp = StationPlot(ax, 0, 0, fontsize=13, spacing=25)
+    ax.set_xlim(-8, 8)
+    ax.set_ylim(-8, 8)
+    ax.set_title('Station Model')
+    station_circle = patches.Circle((0, 0), radius=7, lw=1, edgecolor='k', facecolor='w')
+    ax.add_patch(station_circle)
     data = {
         # 'temperature': None,
         # 'dew_point_temperature': None,
@@ -160,13 +179,8 @@ class StationModel:
     }
 
     def plot_station_model(self):
-        fig, ax = plt.subplots(figsize=(10, 10))
-        self.ax.set_xlim(-8, 8)
-        self.ax.set_ylim(-8, 8)
-        self.sp = StationPlot(ax, 0, 0, fontsize=13, spacing=25)
-        self.ax.set_title('Station Model')
-        station_circle = patches.Circle((0, 0), radius=7, lw=1, edgecolor='k', facecolor='w')
-        self.ax.add_patch(station_circle)
+
+
         # to add pressure_tendency symbol to the model
         self.sp.plot_symbol((5, 0), codes=[self.data['pressure_tendency']], symbol_mapper=pressure_tendency,
                             va='center', ha='center', fontsize=25)

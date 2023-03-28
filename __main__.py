@@ -1,3 +1,5 @@
 import st_plot as st
+
+
 def __main__():
-    i = st.FetchData.get_input()
+    i = st.FetchData.get_input_date_time()
