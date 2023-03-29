@@ -9,92 +9,78 @@ import meteostat as mt
 from datetime import datetime as dt
 from dataclasses import dataclass
 import metpy
+import cv2
 
 
 @dataclass
-class FetchData:
+class StationModelPlot:
     station_id: str = None
     path_to_file: str = None
 
-    '''FetchData Method takes Station_ID as String. ex:'12992'
-    start is Start time for accumulation of observations in dt format. ex_Input: dt(YYYY, MM, DD, HH, MM, SS)
-    end is End time range of the accumulation of data in dt format . dt(YYYY, MM, DD, HH, MM, SS) 
-                                                                    -> (2022,  1,  2, 23, 59)
-    period is observation frequency for the observations. parameter only accepts string, defaults to 'Hourly'
-    Ex. 'Monthly','Daily'
-    Example input:
-    # a = FetchData('43128')
-    # a = a.fetch_station_data(dt(2022, 1, 1), dt(2022, 1, 1, 23, 59), 'hourly')
+    '''StationModelPlot Class takes Station_ID as String. ex:'12992'
+    
     '''
 
     def fetch_station_data(self, start_time: dt, end_time: dt, obs_frequency='hourly'):
-        if obs_frequency.lower() == 'hourly':
-            if start_time >= end_time:
-                print('Enter Valid date time to fetch hourly data')
-            else:
-                data = mt.Hourly(self.station_id, start_time, end_time)
-                data = data.fetch()
-                d_parameters = list(data.columns.values)
-                return data, d_parameters
-        elif obs_frequency.lower() == 'daily':
-            if start_time >= end_time:
-                print('Enter Valid days for fetching Daily data')
-            else:
-                data = mt.Daily(self.station_id, start_time, end_time)
-                data = data.fetch()
-                d_parameters = list(data.columns.values)
-                return data, d_parameters
-        elif obs_frequency.lower() == 'monthly':
-            if start_time >= end_time:
-                print('Enter Valid months in Date,Time for fetching monthly data')
-            else:
-                data = mt.Monthly(self.station_id, start_time, end_time)
-                data = data.fetch()
-                d_parameters = list(data.columns.values)
-                return data, d_parameters
+        """ start is Start time for accumulation of observations in dt format. ex_Input: dt(YYYY, MM, DD, HH, MM, SS)
+        end is End time range of the accumulation of data in dt format . dt(YYYY, MM, DD, HH, MM, SS)
+                                                                        -> (2022,  1,  2, 23, 59)
+        obs_frequency is observations frequency. parameter accepts string, defaults to 'Hourly'
+        Ex. 'Monthly','Daily'
+        Example input:
+        # a = StationModelPlot('43128')
+        # a = a.fetch_station_data(dt(2022, 1, 1), dt(2022, 1, 1, 23, 59), 'hourly')"""
+        frequency = ['hourly', 'daily', 'monthly']
+        frequency_fetch = {'hourly': mt.Hourly,
+                           'monthly': mt.Monthly,
+                           'daily': mt.Daily
+
+                           }
+        if obs_frequency.lower() in frequency and start_time <= end_time:
+            weather_data = frequency_fetch[obs_frequency](self.station_id, start_time, end_time)
+            weather_data = weather_data.fetch()
+            weather_data = weather_data.reset_index()
+            data_parameters = list(weather_data.columns.values)
+            return weather_data, data_parameters
+        elif obs_frequency.lower() not in frequency:
+            raise RuntimeError(f'Enter a valid observation frequency from {frequency}')
         else:
-            return print('The data period frequency is not valid')
+            raise RuntimeError('Start time should be less than End time')
 
     def custom_file_read(self):
-        """This method takes the '.CSV' file or File_Path as input parameter and returns DF from
+        """This method takes the file as object or File_Path as input parameter and returns DF from
         # a= CustomData('pa1.csv')
         # a = a.custom_file_read()
         # print(a)
         """
-        if self.path_to_file[-4:] == '.csv':
-            data = pd.read_csv(self.path_to_file)
-            d_parameters = list(data.columns.values)
-            return data, d_parameters
-        elif '.txt' in self.path_to_file[-4:]:
-            data = parse_metar_file(filename=self.path_to_file)
-            d_parameters = list(data.columns.values)
-            return data, d_parameters
-        elif self.path_to_file[-4:] == '.xml':
-            data = pd.read_xml(path_or_buffer=self.path_to_file)
-            d_parameters = list(data.columns.values)
-            return data, d_parameters
-        elif self.path_to_file[-3:] == '.nc':
-            data = xr.open_dataset(filename_or_obj=self.path_to_file, engine="netcdf4")
-            data = data.metpy.parse_cf()
-            data = data.to_dataframe()
-            data = data.reset_index()
-            d_parameters = list(data.columns.values)
-            return data, d_parameters
-        elif not self.path_to_file[-4:] in ['.txt', '.nc', '.xml', '.csv']:
-            raise RuntimeError ('File Format should be a .csv, .txt, .cn or .xml file')
+        supported_types = ['nc', 'xml', 'txt', 'csv']
+        extension_read = {'nc': xr.open_dataset,
+                          'xml': pd.read_xml,
+                          'txt': parse_metar_file,
+                          'csv': pd.read_csv
+                          }
+        extension = self.path_to_file[self.path_to_file.rfind('.'):][1:]
+        if extension not in supported_types:
+            raise RuntimeError(f'Supported file formats are {supported_types}')
+        elif extension == 'nc':
+            weather_data = extension_read['nc'](self.path_to_file, engine="netcdf4")
+            weather_data = weather_data.metpy.parse_cf()
+            weather_data = weather_data.to_dataframe()
+            weather_data = weather_data.reset_index()
+        else:
+            weather_data = extension_read[extension](self.path_to_file)
+        data_parameters = list(weather_data.columns.values)
+        return weather_data, data_parameters
 
-    @staticmethod
-    def get_input_data(self):
-        ts_str = input("Enter a timestamp in the format 'YYYY-MM-DD HH:MM:SS': ")
-        ts = datetime.strptime(ts_str, '%Y-%m-%d %H:%M:%S')
+    def get_time_stamp(self, time_stamp_string: str):
+        """get_time_stamp method accepts argument as String in the format --> 'YYYY-MM-DD HH:MM:SS' """
+        ts = datetime.strptime(time_stamp_string, '%Y-%m-%d %H:%M:%S')
         return ts
 
-    @staticmethod
-    def param_data_validation(self):
-        a, b = FetchData.custom_file_read()
-        ip = FetchData.get_input_data()
+    def parameter_validation(self, time_stamp_data: dict, data_columns: list):
+        data_to_plot = {}
         parameter_abbreviations = {
-            'station_id':['Station_ID','station', 'station_id' ],
+            'station_id': ['Station_ID', 'station', 'station_id', 'STATION_ID'],
             'date_time': ['valid', 'time', 'date_time', 'time1', 'time_stamp', 'DATE_TIME'],
 
             'temperature': ['Temperature', 'TEMPERATURE', 'tmpt', 'air_temperature',
@@ -108,10 +94,10 @@ class FetchData:
             'pressure': ['PRESSURE', 'pres', 'mslp', 'atmospheric_pressure', 'air_pressure_at_sea_level'],
             'high_cloud': ['high_cloud_type', 'skyc3', 'high_cloud'],
             'mid_cloud': ['mid_cloud_type', 'skyc2', 'mid_cloud'],
-            'low_cloud': ['low_cloud_type', 'skyc1','low_cloud'],
-            'sky_cover': ['cloud_coverage', 'skyc1','sky_cover'],
-            'visibility_distance': ['visibility', 'vsby','visibility_distance'],
-            'present_weather': ['coco', 'current_weather', 'wxcodes', 'current_wx1','present_weather'],
+            'low_cloud': ['low_cloud_type', 'skyc1', 'low_cloud'],
+            'sky_cover': ['cloud_coverage', 'skyc1', 'sky_cover'],
+            'visibility_distance': ['visibility', 'vsby', 'visibility_distance'],
+            'present_weather': ['coco', 'current_weather', 'wxcodes', 'current_wx1', 'present_weather'],
             'past_weather': None,
             'pressure_tendency': None,
             'pressure_change': None,
@@ -120,36 +106,42 @@ class FetchData:
             'sky_cover_at_lowest_cloud': ['low_cloud_level', 'skyl1',
                                           'SKY_COVER_AT_LOWEST_CLOUD', 'sky_cover_at_lowest_cloud']
         }
-        data_to_plot = {
+        parameters_to_plot = list(parameter_abbreviations.keys())
+        for i in range(len(data_columns)):
+            if data_columns[i] in parameters_to_plot:
+                data_to_plot[data_columns[i]] = time_stamp_data[data_columns[i]]
+            elif data_columns[i] not in parameters_to_plot:
+                for j in range(len(parameters_to_plot)):
+                    if data_columns[i] in parameter_abbreviations[parameters_to_plot[j]]:
+                        index_key = parameters_to_plot[list(parameter_abbreviations.values()).index(data_columns[i])]
+                        data_to_plot[index_key] = time_stamp_data[data_columns[i]]
+                    else:
+                        print('one or more parameters of the file is not accepted')
+                        user_parameter = input(f'Select parameter from {parameters_to_plot} to add a abbreviation')
+                        if user_parameter in parameters_to_plot:
+                            user_added_abbreviation = input('Enter abbreviation for the selected parameter')
+                            parameter_abbreviations[user_parameter].append(user_added_abbreviation)
+                        else:
+                            raise RuntimeError(f'Select parameter to add abbreviation from {parameters_to_plot}')
+        return data_to_plot
 
-        }
-        for i in range(len(b)):
-            if b[i] in parameter_abbreviations['date_time']:
-                if ip in a[b[i]]:
-                    c = a.loc[a[b[i]] == ip]
-                    c = c.squeeze()
-                    data_to_plot = c.to_dict()
-                else:
-                    print(f"Entered TimeStamp doesn't exist in the {self.path}")
+        # for i in range(len(b)):
+        #     if b[i] in parameter_abbreviations['date_time']:
+        #         if ip in a[b[i]]:
+        #             c = a.loc[a[b[i]] == ip]
+        #             c = c.squeeze()
+        #             data_to_plot = c.to_dict()
+        #         else:
+        #             print(f"Entered TimeStamp doesn't exist in the {self.path}")
+        #
+        #     else:
+        #         for key, val in parameter_abbreviations:
+        #             if b[i] in parameter_abbreviations:
+        #                 data_to_plot[b[i]] = a.
+        #             elif b[i] not in parameter_abbreviations:
+        #                 for j in val:
+        # return a
 
-            else:
-                for key, val in parameter_abbreviations:
-                    if b[i] in parameter_abbreviations:
-                        data_to_plot[b[i]] = a.
-                    elif b[i] not in parameter_abbreviations:
-                        for j in val:
-
-
-
-
-# a = FetchData(path_to_file=r"C:\Users\Pavan Koundinya\Desktop\metar_vij.txt")
-# a, b = a.custom_file_read()
-# an = list(a.columns.values)
-# print(an)
-
-
-@dataclass()
-class StationModel(FetchData):
     fig, ax = plt.subplots(figsize=(10, 10))
     sp = StationPlot(ax, 0, 0, fontsize=13, spacing=25)
     ax.set_xlim(-8, 8)
@@ -178,79 +170,98 @@ class StationModel(FetchData):
         # 'sky_cover_at_lowest_cloud': None
     }
 
-    def plot_station_model(self):
-
-
+    def plot_station_model(self, data: dict):
+        fig, ax = plt.subplots(figsize=(10, 10))
+        sp = StationPlot(ax, 0, 0, fontsize=13, spacing=25)
+        ax.set_xlim(-8, 8)
+        ax.set_ylim(-8, 8)
+        ax.set_title('Station Model')
+        station_circle = patches.Circle((0, 0), radius=7, lw=1, edgecolor='k', facecolor='w')
+        ax.add_patch(station_circle)
         # to add pressure_tendency symbol to the model
-        self.sp.plot_symbol((5, 0), codes=[self.data['pressure_tendency']], symbol_mapper=pressure_tendency,
-                            va='center', ha='center', fontsize=25)
+        sp.plot_symbol((5, 0), codes=[data['pressure_tendency']], symbol_mapper=pressure_tendency,
+                       va='center', ha='center', fontsize=25)
 
         # to add Sky_cover symbol to the model
-        self.sp.plot_symbol((0, 0), codes=[self.data['sky_cover']], symbol_mapper=sky_cover, fontsize=25)
+        sp.plot_symbol((0, 0), codes=[data['sky_cover']], symbol_mapper=sky_cover, fontsize=25)
 
         # to add pressure to the model
-        self.sp.plot_text((4, 3), text=[str(self.data['pressure']) + ' hPa'], fontsize=13)
+        sp.plot_text((4, 3), text=[str(data['pressure']) + ' hPa'], fontsize=13)
 
         # to position wind-barb in the center of the model
         # u = -wind_speed * np.sin(np.radians(wind_direction))
         # v = -wspd_mps * math.cos(np.radians(wind_direction))
-        self.sp.plot_barb(u=[-(self.data['wind_speed']) * np.sin(np.radians(self.data['wind_direction']))],
-                          v=[-(self.data['wind_speed']) * np.cos(np.radians(self.data['wind_direction']))], length=11)
+        sp.plot_barb(u=[-(data['wind_speed']) * np.sin(np.radians(data['wind_direction']))],
+                     v=[-(data['wind_speed']) * np.cos(np.radians(data['wind_direction']))], length=11)
         # to add wind speed in knots at the end of the barb
-        self.ax.text(1.5 * np.sin(np.radians(self.data['wind_direction'])),
-                     1.5 * np.cos(np.radians(self.data['wind_direction'])),
-                     str(self.data['wind_speed']) + ' kts',
-                     ha='center', va='bottom', rotation=0, fontsize=10, alpha=0.3)
+        ax.text(1.5 * np.sin(np.radians(data['wind_direction'])),
+                1.5 * np.cos(np.radians(data['wind_direction'])),
+                str(data['wind_speed']) + ' kts',
+                ha='center', va='bottom', rotation=0, fontsize=10, alpha=0.3)
 
         # to add height of the cloud base
-        self.sp.plot_text((-2, -5.5), text=[str(self.data['cloud_height'])], fontsize=13)
+        sp.plot_text((-2, -5.5), text=[str(data['cloud_height'])], fontsize=13)
 
         # to add dew_point_temperature to the model
-        self.sp.plot_text((-4, 3), text=[str(self.data['dew_point_temperature']) + '°C'], fontsize=13)
+        sp.plot_text((-4, 3), text=[str(data['dew_point_temperature']) + '°C'], fontsize=13)
 
         # to add high_clouds symbol to the model
-        self.sp.plot_symbol((1, 5), codes=[self.data['high_cloud']], symbol_mapper=high_clouds,
-                            va='center', ha='center', fontsize=25)
+        # self.sp.plot_symbol((1, 5), codes=[data['high_cloud']], symbol_mapper=high_clouds,
+        #                     va='center', ha='center', fontsize=25)
+        ax.text(1, 4, data['high_cloud'], fontsize=13, bbox=dict(boxstyle='round',
+                                                                 facecolor='turquoise', alpha=0.7))
 
         # to add low_clouds symbol to the model
-        self.sp.plot_symbol((-2, -3.5), codes=[self.data['low_cloud']], symbol_mapper=low_clouds,
-                            va='center', ha='center', fontsize=25)
+        # sp.plot_symbol((-2, -3.5), codes=[data['low_cloud']], symbol_mapper=low_clouds,
+        #                     va='center', ha='center', fontsize=25)
+        ax.text(-1.5, -3, data['low_cloud'], fontsize=13, bbox=dict(boxstyle='round',
+                                                                    facecolor='turquoise', alpha=0.2))
 
         # to add mid_clouds symbol to the model
-        self.sp.plot_symbol((2, 3), codes=[self.data['mid_cloud']], symbol_mapper=mid_clouds,
-                            va='center', ha='center', fontsize=25)
+        # sp.plot_symbol((2, 3), codes=[data['mid_cloud']], symbol_mapper=mid_clouds,
+        #                     va='center', ha='center', fontsize=25)
+        ax.text(0.5, 2.2, data['mid_cloud'], fontsize=13, bbox=dict(boxstyle='round',
+                                                                    facecolor='turquoise', alpha=0.5))
 
         # to add past_weather symbol to the model
-        self.sp.plot_symbol((2, -3.5), codes=wx_code_map[self.data['past_weather']], symbol_mapper=current_weather,
-                            va='center', ha='center', fontsize=25)
+        sp.plot_symbol((2, -3.5), codes=wx_code_map[data['past_weather']], symbol_mapper=current_weather,
+                       va='center', ha='center', fontsize=25)
 
         # to add precipitation to the model
-        self.sp.plot_text((2, -5.5), text=[str(self.data['precipitation'])], fontsize=13)
+        sp.plot_text((2, -5.5), text=[str(data['precipitation'])], fontsize=13)
 
         # to add present_weather symbol to the model
-        self.sp.plot_symbol((-4, 0), codes=wx_code_map[self.data['present_weather']], symbol_mapper=current_weather,
-                            va='center', ha='center', fontsize=25)
+        sp.plot_symbol((-4, 0), codes=wx_code_map[data['present_weather']], symbol_mapper=current_weather,
+                       va='center', ha='center', fontsize=25)
 
         # to add pressure_change to the model
-        self.sp.plot_text((3.2, 0), text=[str(self.data['pressure_change'])], fontsize=13)
+        sp.plot_text((3.2, 0), text=[str(data['pressure_change'])], fontsize=13)
 
         # to add pressure_difference to the model
-        self.sp.plot_text((4, 0), text=[str(self.data['pressure_difference'])], fontsize=13)
+        sp.plot_text((4, 0), text=[str(data['pressure_difference'])], fontsize=13)
 
         # to add sky_cover_of the lowest cloud to the model
-        self.sp.plot_text((0, -4), text=[str(self.data['sky_cover_at_lowest_cloud'])], fontsize=13)
+        sp.plot_text((0, -4), text=[str(data['sky_cover_at_lowest_cloud'])], fontsize=13)
 
         # to add temperature to the model
-        self.sp.plot_text((-4, 3), text=[str(self.data['temperature']) + '°C'], fontsize=13)
+        sp.plot_text((-4, 3), text=[str(data['temperature']) + '°C'], fontsize=13)
 
         # to add visibility_distance to the model
-        self.sp.plot_text((-6, 0), text=[str(self.data['visibility_distance']) + 'miles'], fontsize=13)
-        return plt.show()
+        sp.plot_text((-6, 0), text=[str(data['visibility_distance']) + 'miles'], fontsize=13)
 
+        # adds Station_ID to the model
+        ax.text(4, 7, 'Station_ID: ' + data['Station_ID'], fontsize=13, weight=10)
 
+        plt.show()
+        path = '/home/hp/PycharmProjects/station_model'
+        name = 'Station_model.jpeg'
+        plt.savefig(path+name, dpi= 500)
 
+        return cv2.imshow(path+name)
 
-# adding metpy logo at the corner
-# al = add_metpy_logo(fig=fig, x=8, y=8, zorder=5, size='small')
+    # adding metpy logo at the corner
+    # al = add_metpy_logo(fig=fig, x=8, y=8, zorder=5, size='small')
 
-# plt.grid()
+    # plt.grid()
+    def main(self):
+        pass
