@@ -22,8 +22,8 @@ class StationModelPlot:
     '''
 
     def fetch_station_data(self, start_time: dt, end_time: dt, obs_frequency='hourly'):
-        """ start is Start time for accumulation of observations in dt format. ex_Input: dt(YYYY, MM, DD, HH, MM, SS)
-        end is End time range of the accumulation of data in dt format . dt(YYYY, MM, DD, HH, MM, SS)
+        """ start is Start time for accumulation of observations in dt format. ex_Input: dt(YYYY, MM, DD, HH, MM)
+        end is End time range of the accumulation of data in dt format . dt(YYYY, MM, DD, HH, MM)
                                                                         -> (2022,  1,  2, 23, 59)
         obs_frequency is observations frequency. parameter accepts string, defaults to 'Hourly'
         Ex. 'Monthly','Daily'
@@ -72,11 +72,13 @@ class StationModelPlot:
         data_parameters = list(weather_data.columns.values)
         return weather_data, data_parameters
 
+    @staticmethod
     def get_time_stamp(self, time_stamp_string: str):
         """get_time_stamp method accepts argument as String in the format --> 'YYYY-MM-DD HH:MM:SS' """
-        ts = datetime.strptime(time_stamp_string, '%Y-%m-%d %H:%M:%S')
+        ts = dt.strptime(time_stamp_string, '%Y-%m-%d %H:%M:%S')
         return ts
 
+    @staticmethod
     def parameter_validation(self, time_stamp_data: dict, data_columns: list):
         data_to_plot = {}
         parameter_abbreviations = {
@@ -103,13 +105,16 @@ class StationModelPlot:
             'pressure_change': None,
             'pressure_difference': None,
             'precipitation': ['p01i', 'prcp', 'PRECIPITATION', 'precipitation'],
-            'sky_cover_at_lowest_cloud': ['low_cloud_level', 'skyl1',
-                                          'SKY_COVER_AT_LOWEST_CLOUD', 'sky_cover_at_lowest_cloud']
+            'sky_cover_at_lowest_cloud': ['low_cloud_level', 'skyc1', 'cloud_coverage'
+                                                                      'SKY_COVER_AT_LOWEST_CLOUD',
+                                          'sky_cover_at_lowest_cloud']
         }
         parameters_to_plot = list(parameter_abbreviations.keys())
         for i in range(len(data_columns)):
             if data_columns[i] in parameters_to_plot:
                 data_to_plot[data_columns[i]] = time_stamp_data[data_columns[i]]
+                if data_columns[i] == 'present_weather':
+                    pass
             elif data_columns[i] not in parameters_to_plot:
                 for j in range(len(parameters_to_plot)):
                     if data_columns[i] in parameter_abbreviations[parameters_to_plot[j]]:
@@ -122,7 +127,10 @@ class StationModelPlot:
                             user_added_abbreviation = input('Enter abbreviation for the selected parameter')
                             parameter_abbreviations[user_parameter].append(user_added_abbreviation)
                         else:
-                            raise RuntimeError(f'Select parameter to add abbreviation from {parameters_to_plot}')
+                            raise RuntimeError(f'Select parameter from {parameters_to_plot} to add abbreviation')
+            else:
+                raise RuntimeError('')
+
         return data_to_plot
 
         # for i in range(len(b)):
@@ -252,16 +260,31 @@ class StationModelPlot:
         # adds Station_ID to the model
         ax.text(4, 7, 'Station_ID: ' + data['Station_ID'], fontsize=13, weight=10)
 
-        plt.show()
-        path = '/home/hp/PycharmProjects/station_model'
+        path = '/home/hp/PycharmProjects/station_model/'
         name = 'Station_model.jpeg'
-        plt.savefig(path+name, dpi= 500)
+        plt.savefig(path + name, dpi=100)
 
-        return cv2.imshow(path+name)
+        return path + name
 
     # adding metpy logo at the corner
     # al = add_metpy_logo(fig=fig, x=8, y=8, zorder=5, size='small')
 
     # plt.grid()
     def main(self):
-        pass
+        dat = {'fetch data': 'Enter Station ID to fetch data',
+               'upload data file': 'Enter Path to file'
+               }
+        i = 0
+        while i == 0:
+            a = input(f'Enter method from {list(dat.keys())}')
+            if a.lower() == 'fetch data':
+                st_id = input(dat[a])
+                obj = StationModelPlot(station_id=st_id)
+                i += 1
+            elif a.lower() == 'upload data file':
+                pt_to_file = input(dat[a])
+                obj = StationModelPlot(path_to_file=pt_to_file)
+                i += 1
+            else:
+                i = 0
+
