@@ -21,15 +21,15 @@ class StationModelPlot:
     
     '''
 
-    def fetch_station_data(self, start_time: dt, end_time: dt, obs_frequency='hourly'):
-        """ start is Start time for accumulation of observations in dt format. ex_Input: dt(YYYY, MM, DD, HH, MM)
-        end is End time range of the accumulation of data in dt format . dt(YYYY, MM, DD, HH, MM)
-                                                                        -> (2022,  1,  2, 23, 59)
+    def fetch_station_data(self, start_time, end_time, obs_frequency='hourly'):
+        """ start is Start time for accumulation of observations in format:YYYY:MM:DD HH:MM:SS ex_Input: '2023-03-29 07:51:00'
+        end is End time range of the accumulation of data in format:YYYY:MM:DD HH:MM:SS
+                                                                        -> '2023-03-29 07:51:00'
         obs_frequency is observations frequency. parameter accepts string, defaults to 'Hourly'
         Ex. 'Monthly','Daily'
         Example input:
-        # a = StationModelPlot('43128')
-        # a = a.fetch_station_data(dt(2022, 1, 1), dt(2022, 1, 1, 23, 59), 'hourly')"""
+        # a = StationModelPlot('43128') Enter a Valid Station ID to get respective station data
+        # a = a.fetch_station_data('2023-03-29 07:51:00', '2023-04-29 07:51:00', 'hourly')"""
         frequency = ['hourly', 'daily', 'monthly']
         frequency_fetch = {'hourly': mt.Hourly,
                            'monthly': mt.Monthly,
@@ -75,51 +75,34 @@ class StationModelPlot:
     @staticmethod
     def get_time_stamp(self, time_stamp_string: str):
         """get_time_stamp method accepts argument as String in the format --> 'YYYY-MM-DD HH:MM:SS' """
-        ts = dt.strptime(time_stamp_string, '%Y-%m-%d %H:%M:%S')
-        return ts
+        return dt.strptime(time_stamp_string, '%Y-%m-%d %H:%M:%S')
 
     @staticmethod
-    def parameter_validation(self, time_stamp_data: dict, data_columns: list):
-        data_to_plot = {}
-        parameter_abbreviations = {
-            'station_id': ['Station_ID', 'station', 'station_id', 'STATION_ID'],
-            'date_time': ['valid', 'time', 'date_time', 'time1', 'time_stamp', 'DATE_TIME'],
+    def parameter_validation(self, time_stamp_data: dict, data_column_values: list, parameter_abbreviations: dict):
+        """
 
-            'temperature': ['Temperature', 'TEMPERATURE', 'tmpt', 'air_temperature',
-                            'temp', 'tmpf', 'tmpc', 'temperature', 'tavg'],
-            'dew_point_temperature': ['Dew_Point_Temperature', 'DEW_POINT_TEMPERATURE', 'dwpt', 'dwpc',
-                                      'dew_temp', 'dwpf', 'dew_point_temperature'],
-            'wind_speed': ['WIND_SPEED', 'wspd', 'sknt', 'Wind_Speed', 'wind_speed'],
-            'wind_direction': ['WIND_DIRECTION', 'Wind_Direction', 'drct', 'wdir', 'wind_direction'],
-            'cloud_height': ['skyl3', 'highest_cloud_level', 'high_cloud_level',
-                             'medium_cloud_level', 'low_cloud_level'],
-            'pressure': ['PRESSURE', 'pres', 'mslp', 'atmospheric_pressure', 'air_pressure_at_sea_level'],
-            'high_cloud': ['high_cloud_type', 'skyc3', 'high_cloud'],
-            'mid_cloud': ['mid_cloud_type', 'skyc2', 'mid_cloud'],
-            'low_cloud': ['low_cloud_type', 'skyc1', 'low_cloud'],
-            'sky_cover': ['cloud_coverage', 'skyc1', 'sky_cover'],
-            'visibility_distance': ['visibility', 'vsby', 'visibility_distance'],
-            'present_weather': ['coco', 'current_weather', 'wxcodes', 'current_wx1', 'present_weather'],
-            'past_weather': None,
-            'pressure_tendency': None,
-            'pressure_change': None,
-            'pressure_difference': None,
-            'precipitation': ['p01i', 'prcp', 'PRECIPITATION', 'precipitation'],
-            'sky_cover_at_lowest_cloud': ['low_cloud_level', 'skyc1', 'cloud_coverage'
-                                                                      'SKY_COVER_AT_LOWEST_CLOUD',
-                                          'sky_cover_at_lowest_cloud']
-        }
+        Args:
+            self:
+            time_stamp_data (dict):
+            data_column_values:
+            parameter_abbreviations:
+
+        Returns:
+            dict: Data that needs to be plotted.
+        """
+        data_to_plot = {}
+
         parameters_to_plot = list(parameter_abbreviations.keys())
-        for i in range(len(data_columns)):
-            if data_columns[i] in parameters_to_plot:
-                data_to_plot[data_columns[i]] = time_stamp_data[data_columns[i]]
-                if data_columns[i] == 'present_weather':
+        for i in range(len(data_column_values)):
+            if data_column_values[i] in parameters_to_plot:
+                data_to_plot[data_column_values[i]] = time_stamp_data[data_column_values[i]]
+                if data_column_values[i] == 'present_weather':
                     pass
-            elif data_columns[i] not in parameters_to_plot:
+            elif data_column_values[i] not in parameters_to_plot:
                 for j in range(len(parameters_to_plot)):
-                    if data_columns[i] in parameter_abbreviations[parameters_to_plot[j]]:
-                        index_key = parameters_to_plot[list(parameter_abbreviations.values()).index(data_columns[i])]
-                        data_to_plot[index_key] = time_stamp_data[data_columns[i]]
+                    if data_column_values[i] in parameter_abbreviations[parameters_to_plot[j]]:
+                        index_key = parameters_to_plot[list(parameter_abbreviations.values()).index(data_column_values[i])]
+                        data_to_plot[index_key] = time_stamp_data[data_column_values[i]]
                     else:
                         print('one or more parameters of the file is not accepted')
                         user_parameter = input(f'Select parameter from {parameters_to_plot} to add a abbreviation')
@@ -150,33 +133,33 @@ class StationModelPlot:
         #                 for j in val:
         # return a
 
-    fig, ax = plt.subplots(figsize=(10, 10))
-    sp = StationPlot(ax, 0, 0, fontsize=13, spacing=25)
-    ax.set_xlim(-8, 8)
-    ax.set_ylim(-8, 8)
-    ax.set_title('Station Model')
-    station_circle = patches.Circle((0, 0), radius=7, lw=1, edgecolor='k', facecolor='w')
-    ax.add_patch(station_circle)
-    data = {
-        # 'temperature': None,
-        # 'dew_point_temperature': None,
-        # 'wind_speed': None,
-        # 'wind_direction': None,
-        # 'cloud_height': None,
-        # 'pressure': None,
-        # 'high_cloud': None,
-        # 'mid_cloud': None,
-        # 'low_cloud': None,
-        # 'sky_cover': None,
-        # 'visibility_distance': None,
-        # 'present_weather': None,
-        # 'past_weather': None,
-        # 'pressure_tendency': None,
-        # 'pressure_change': None,
-        # 'pressure_difference': None,
-        # 'precipitation': None,
-        # 'sky_cover_at_lowest_cloud': None
-    }
+    # fig, ax = plt.subplots(figsize=(10, 10))
+    # sp = StationPlot(ax, 0, 0, fontsize=13, spacing=25)
+    # ax.set_xlim(-8, 8)
+    # ax.set_ylim(-8, 8)
+    # ax.set_title('Station Model')
+    # station_circle = patches.Circle((0, 0), radius=7, lw=1, edgecolor='k', facecolor='w')
+    # ax.add_patch(station_circle)
+    # data = {
+    #     # 'temperature': None,
+    #     # 'dew_point_temperature': None,
+    #     # 'wind_speed': None,
+    #     # 'wind_direction': None,
+    #     # 'cloud_height': None,
+    #     # 'pressure': None,
+    #     # 'high_cloud': None,
+    #     # 'mid_cloud': None,
+    #     # 'low_cloud': None,
+    #     # 'sky_cover': None,
+    #     # 'visibility_distance': None,
+    #     # 'present_weather': None,
+    #     # 'past_weather': None,
+    #     # 'pressure_tendency': None,
+    #     # 'pressure_change': None,
+    #     # 'pressure_difference': None,
+    #     # 'precipitation': None,
+    #     # 'sky_cover_at_lowest_cloud': None
+    # }
 
     def plot_station_model(self, data: dict):
         fig, ax = plt.subplots(figsize=(10, 10))
