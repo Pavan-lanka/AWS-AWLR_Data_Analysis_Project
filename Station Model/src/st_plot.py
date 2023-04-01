@@ -243,7 +243,7 @@ class StationModelPlot:
         # adds Station_ID to the model
         ax.text(4, 7, 'Station_ID: ' + data['Station_ID'], fontsize=13, weight=10)
 
-        path = '/home/hp/PycharmProjects/station_model/'
+        path = '//'
         name = 'Station_model.jpeg'
         plt.savefig(path + name, dpi=100)
 
