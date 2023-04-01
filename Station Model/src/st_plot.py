@@ -13,6 +13,7 @@ import cv2
 
 
 @dataclass
+
 class StationModelPlot:
     station_id: str = None
     path_to_file: str = None
