@@ -97,7 +97,7 @@ class StationModelPlot:
                                       'dew_temp', 'dwpf', 'dew_point_temperature'],
             'wind_speed': ['WIND_SPEED', 'wspd', 'sknt', 'Wind_Speed', 'wind_speed'],
             'wind_direction': ['WIND_DIRECTION', 'Wind_Direction', 'drct', 'wdir', 'wind_direction'],
-            'cloud_height': ['skyl3', 'skyl4', 'highest_cloud_level', 'high_cloud_level',
+            'cloud_height': ['skyl1', 'skyl2', 'skyl3', 'skyl4', 'highest_cloud_level', 'high_cloud_level',
                              'medium_cloud_level', 'low_cloud_level'],
             'pressure': ['PRESSURE', 'pres', 'mslp', 'atmospheric_pressure', 'air_pressure_at_sea_level'],
             'high_cloud': ['high_cloud_type', 'skyc3', 'high_cloud'],
@@ -112,8 +112,8 @@ class StationModelPlot:
             'pressure_change': [],
             'pressure_difference': [],
             'precipitation': ['p01i', 'prcp', 'PRECIPITATION', 'precipitation'],
-            'sky_cover_at_lowest_cloud': ['cloud_coverage', 'SKY_COVER_AT_LOWEST_CLOUD', 'sky_cover_at_lowest_cloud',
-                                          'skyl1']
+            'sky_cover_at_lowest_cloud': ['skyl1', 'SKY_COVER_AT_LOWEST_CLOUD', 'sky_cover_at_lowest_cloud',
+                                          'cloud_coverage']
         }
         parameter_keys = list(parameter_abbreviations.keys())
         parameter_abb_list = list(parameter_abbreviations.values())
@@ -168,7 +168,7 @@ class StationModelPlot:
             'sky_cover': "sp.plot_symbol((0, 0), codes=[data['sky_cover']], symbol_mapper=sky_cover, fontsize=25)",
 
             # to add pressure to the model
-            'pressure': "sp.plot_text((4, 3), text=[str(data['pressure']) + ' hPa'], fontsize=13)",
+            'pressure': "ax.text(3, 3, s=str(round(data['pressure'])) + ' hPa', fontsize=13)",
 
             # to position wind-barb in the center of the model
             # u = [-wind_speed * np.sin(np.radians(wind_direction))] U component of wind barb
@@ -176,27 +176,27 @@ class StationModelPlot:
             'wind_speed': "sp.plot_barb(u=[-(data['wind_speed']) * np.sin(np.radians(data['wind_direction']))],"
                           "v=[-(data['wind_speed']) * np.cos(np.radians(data['wind_direction']))], length=11)",
             # to add wind speed in knots at the end of the barb
-            'wind_direction': "ax.text(2.7 * np.sin(np.radians(data['wind_direction'])),"
-                              "2.7 * np.cos(np.radians(data['wind_direction'])),str(data['wind_speed']) + ' kts',"
+            'wind_direction': "ax.text(2.5 * np.sin(np.radians(data['wind_direction'])),"
+                              "2.5 * np.cos(np.radians(data['wind_direction'])),str(data['wind_speed']) + ' kts',"
                               "ha='center', va='bottom', rotation=0, fontsize=10, alpha=0.3)",
 
             # to add height of the cloud base
-            'cloud_height': "sp.plot_text((-2, -5.5), text=[str(data['cloud_height'])], fontsize=13)",
+            'cloud_height': "ax.text(-1.5, -3.5, s=str(data['cloud_height']), fontsize=13)",
 
             # to add dew_point_temperature to the model
-            'dew_point_temperature': "sp.plot_text((-4, -3), "
-                                     "text=[str(data['dew_point_temperature']) + '°C'], fontsize=13)",
+            'dew_point_temperature': "ax.text(-3.5, -2.5, "
+                                     "s=str(data['dew_point_temperature']) + '°C', fontsize=13)",
 
             # to add high_clouds symbol to the model
-            'high_cloud': "ax.text(1, 4, data['high_cloud'], fontsize=13,"
+            'high_cloud': "ax.text(1.5, 4.5, s = str(data['high_cloud']), fontsize=13,"
                           " bbox=dict(boxstyle='round',facecolor='turquoise', alpha=0.7))",
 
             # to add low_clouds symbol to the model
-            'low_cloud': "ax.text(-1.5, -3, data['low_cloud'], fontsize=13,"
+            'low_cloud': "ax.text(-2, -2.5, s = str(data['low_cloud']), fontsize=13,"
                          "bbox=dict(boxstyle='round',facecolor='turquoise', alpha=0.2))",
 
             # to add mid_clouds symbol to the model
-            'mid_cloud': "ax.text(0.5, 2.2, data['mid_cloud'], fontsize=13, "
+            'mid_cloud': "ax.text(1, 3, s = str(data['mid_cloud']), fontsize=13, "
                          "bbox=dict(boxstyle='round',facecolor='turquoise', alpha=0.5))",
 
             # to add past_weather symbol to the model
@@ -207,7 +207,7 @@ class StationModelPlot:
             'precipitation': "sp.plot_text((2, -5.5), text=[str(data['precipitation'])], fontsize=13)",
 
             # to add present_weather symbol to the model
-            'present_weather': "sp.plot_symbol((-4, 0), codes=[int(data['present_weather'])], "
+            'present_weather': "sp.plot_symbol((-3.5, 0), codes=[int(data['present_weather'])], "
                                "symbol_mapper=current_weather,va='center', ha='center', fontsize=25)",
 
             # to add pressure_change to the model
@@ -217,19 +217,19 @@ class StationModelPlot:
             'pressure_difference': "sp.plot_text((4, 0), text=[str(data['pressure_difference'])], fontsize=13)",
 
             # to add sky_cover_of the lowest cloud to the model
-            'sky_cover_at_lowest_cloud': "sp.plot_text((0, -4), "
-                                         "text=str(data['sky_cover_at_lowest_cloud']), fontsize=13)",
+            'sky_cover_at_lowest_cloud': "ax.text(-0.5, -2.5, "
+                                         "s=str(data['sky_cover_at_lowest_cloud']), fontsize=13)",
 
             # to add temperature to the model
-            'temperature': "sp.plot_text((-4, 3), text=str(data['temperature']), fontsize=13)",
+            'temperature': "ax.text(-3.5, 2, s = str(data['temperature'])+'°C', fontsize=13)",
 
             # to add visibility_distance to the model
-            'visibility_distance': "sp.plot_text((-6, 0), text=str(data['visibility_distance']), fontsize=13)",
+            'visibility_distance': "ax.text(-4.5, 0, s=str(round(data['visibility_distance'])), fontsize=13)",
 
             # adds Station_ID to the model
-            'station_id': "ax.text(4, 7, 'Station_ID: ' + data['station_id'], fontsize=13, weight=10)",
+            'station_id': "ax.text(2.8, 6.7, s =('Station ID: ' + data['station_id']), fontsize=13, weight=10)",
 
-            'date_time': "ax.text(1.5, 6.2, 'Date& Time:' + str(data['date_time']).rstrip('Timestamp()')"
+            'date_time': "ax.text(-0.5, 6.2, s = ('Date & Time:' + str(data['date_time']).rstrip('Timestamp()'))"
                          ", fontsize = 13, weight=10)"
         }
         for key, value in data.items():
