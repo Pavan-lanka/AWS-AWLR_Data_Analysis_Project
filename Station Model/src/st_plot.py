@@ -181,7 +181,7 @@ class StationModelPlot:
                               "ha='center', va='bottom', rotation=0, fontsize=10, alpha=0.3)",
 
             # to add height of the cloud base
-            'cloud_height': "ax.text(-1.5, -3.5, s=str(data['cloud_height']), fontsize=13)",
+            'cloud_height': "ax.text(-2, -3.5, s=str(data['cloud_height']), fontsize=13)",
 
             # to add dew_point_temperature to the model
             'dew_point_temperature': "ax.text(-3.5, -2.5, "

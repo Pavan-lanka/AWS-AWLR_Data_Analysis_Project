@@ -37,11 +37,11 @@ def main():
             for iter in range(len(date_abbreviations['date_time'])):
                 idx = date_abbreviations['date_time'][iter]
                 if idx in fetched_data_columns:
-                    ts_index = fetched_data[idx]
+                    ts_column_name = fetched_data[idx]
                     ts = StationModelPlot.get_time_stamp(input(
-                        f'Enter Time Stamp from {ts_index} in the format: "YYYY-MM-DD HH:MM:SS ex. 2022-01-10 00:00:00 --: \n'))
-                    ts_data = fetched_data.loc[ts_index == ts]
-                    ts_data = fetched_data.loc[ts_index == str(ts)]
+                        f'Enter Time Stamp from {ts_column_name} in the format: "YYYY-MM-DD HH:MM:SS ex. 2022-01-10 00:00:00 --: \n'))
+                    ts_data = fetched_data.loc[ts_column_name == ts]
+                    ts_data = fetched_data.loc[ts_column_name == str(ts)]
                     ts_data = ts_data.squeeze()
                     ts_data = ts_data.fillna('')
                     break
