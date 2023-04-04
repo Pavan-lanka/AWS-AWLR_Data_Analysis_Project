@@ -168,7 +168,7 @@ class StationModelPlot:
             'sky_cover': "sp.plot_symbol((0, 0), codes=[data['sky_cover']], symbol_mapper=sky_cover, fontsize=25)",
 
             # to add pressure to the model
-            'pressure': "ax.text(3, 3, s=str(round(data['pressure'])) + ' hPa', fontsize=13)",
+            'pressure': "ax.text(3, 2, s=str(round(data['pressure'])) + ' hPa', fontsize=13)",
 
             # to position wind-barb in the center of the model
             # u = [-wind_speed * np.sin(np.radians(wind_direction))] U component of wind barb
@@ -188,7 +188,7 @@ class StationModelPlot:
                                      "s=str(data['dew_point_temperature']) + '°C', fontsize=13)",
 
             # to add high_clouds symbol to the model
-            'high_cloud': "ax.text(1.5, 4.5, s = str(data['high_cloud']), fontsize=13,"
+            'high_cloud': "ax.text(1.5, 4, s = str(data['high_cloud']), fontsize=13,"
                           " bbox=dict(boxstyle='round',facecolor='turquoise', alpha=0.7))",
 
             # to add low_clouds symbol to the model
@@ -196,7 +196,7 @@ class StationModelPlot:
                          "bbox=dict(boxstyle='round',facecolor='turquoise', alpha=0.2))",
 
             # to add mid_clouds symbol to the model
-            'mid_cloud': "ax.text(1, 3, s = str(data['mid_cloud']), fontsize=13, "
+            'mid_cloud': "ax.text(1.5, 2, s = str(data['mid_cloud']), fontsize=13, "
                          "bbox=dict(boxstyle='round',facecolor='turquoise', alpha=0.5))",
 
             # to add past_weather symbol to the model
