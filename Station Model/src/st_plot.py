@@ -176,8 +176,8 @@ class StationModelPlot:
             'wind_speed': "sp.plot_barb(u=[-(data['wind_speed']) * np.sin(np.radians(data['wind_direction']))],"
                           "v=[-(data['wind_speed']) * np.cos(np.radians(data['wind_direction']))], length=11)",
             # to add wind speed in knots at the end of the barb
-            'wind_direction': "ax.text(2.5 * np.sin(np.radians(data['wind_direction'])),"
-                              "2.5 * np.cos(np.radians(data['wind_direction'])),str(data['wind_speed']) + ' kts',"
+            'wind_direction': "ax.text(-1 * np.sin(np.radians(data['wind_direction'])),"
+                              "-1 * np.cos(np.radians(data['wind_direction'])),str(data['wind_speed']) + ' kts',"
                               "ha='center', va='bottom', rotation=0, fontsize=10, alpha=0.3)",
 
             # to add height of the cloud base
@@ -192,7 +192,7 @@ class StationModelPlot:
                           " bbox=dict(boxstyle='round',facecolor='turquoise', alpha=0.7))",
 
             # to add low_clouds symbol to the model
-            'low_cloud': "ax.text(-2, -2.5, s = str(data['low_cloud']), fontsize=13,"
+            'low_cloud': "ax.text(-1.7, -2.5, s = str(data['low_cloud']), fontsize=13,"
                          "bbox=dict(boxstyle='round',facecolor='turquoise', alpha=0.2))",
 
             # to add mid_clouds symbol to the model
@@ -217,7 +217,7 @@ class StationModelPlot:
             'pressure_difference': "sp.plot_text((4, 0), text=[str(data['pressure_difference'])], fontsize=13)",
 
             # to add sky_cover_of the lowest cloud to the model
-            'sky_cover_at_lowest_cloud': "ax.text(-0.5, -2.5, "
+            'sky_cover_at_lowest_cloud': "ax.text(-0.2, -2.5, "
                                          "s=str(data['sky_cover_at_lowest_cloud']), fontsize=13)",
 
             # to add temperature to the model
@@ -247,3 +247,6 @@ class StationModelPlot:
         """get_time_stamp method accepts argument as String in the format --> 'YYYY-MM-DD HH:MM' """
         ts = dt.strptime(time_stamp_string, '%Y-%m-%d %H:%M:%S')
         return ts
+    # @staticmethod
+    # def calculable_data(data, data_columns, timestamp_column, timestamp):
+

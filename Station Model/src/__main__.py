@@ -20,32 +20,44 @@ def main():
             ed_time = StationModelPlot.get_time_stamp(
                 input("Enter End time in format: 'YYYY-MM-DD HH:MM:SS ex. 2022-01-20 00:00:00 --:\n"))
             freq = input("Enter observation Frequency from list [Hourly, Daily] : \t")
-            fetched_data, fetched_data_columns = st.fetch_station_data(start_time=st_time, end_time=ed_time,
-                                                                       obs_frequency=freq)
-            fetched_data = fetched_data.fillna('')
+            try:
+                fetched_data, fetched_data_columns = st.fetch_station_data(start_time=st_time, end_time=ed_time,
+                                                                           obs_frequency=freq)
+                fetched_data = fetched_data.fillna('')
+            except Exception as e:
+                print('Please Enter Valid Station ID , Valid Start time and End time in format: YYYY-MM-DD HH:MM:SS')
+                continue
             pass
         elif ip.lower() == 'u':
             pt_to_file = input(obtain_method['upload_data_file'])
-            st = StationModelPlot(path_to_file=pt_to_file)
-            fetched_data, fetched_data_columns = st.custom_file_read()
-            fetched_data = fetched_data.fillna('')
+            try:
+                st = StationModelPlot(path_to_file=pt_to_file)
+                fetched_data, fetched_data_columns = st.custom_file_read()
+                fetched_data = fetched_data.fillna('')
+            except Exception as e:
+                print('Entered Path File is Incorrect please enter a valid file path, or file as an object')
+                continue
             pass
         else:
             continue
         date_abbreviations = {'date_time': ['valid', 'time', 'date_time', 'time1', 'time_stamp', 'DATE_TIME']}
         while True:
-            for iter in range(len(date_abbreviations['date_time'])):
-                idx = date_abbreviations['date_time'][iter]
-                if idx in fetched_data_columns:
-                    ts_column_name = fetched_data[idx]
-                    ts = StationModelPlot.get_time_stamp(input(
-                        f'Enter Time Stamp from {ts_column_name} in the format: "YYYY-MM-DD HH:MM:SS ex. 2022-01-10 00:00:00 --: \n'))
-                    ts_data = fetched_data.loc[ts_column_name == ts]
-                    ts_data = fetched_data.loc[ts_column_name == str(ts)]
-                    ts_data = ts_data.squeeze()
-                    ts_data = ts_data.fillna('')
-                    break
-            pass
+            try:
+                for iter in range(len(date_abbreviations['date_time'])):
+                    idx = date_abbreviations['date_time'][iter]
+                    if idx in fetched_data_columns:
+                        ts_column_name = fetched_data[idx]
+                        ts = StationModelPlot.get_time_stamp(input(
+                            f'Enter Time Stamp from {ts_column_name} in the format: "YYYY-MM-DD HH:MM:SS ex. 2022-01-10 00:00:00 --: \n'))
+                        ts_data = fetched_data.loc[ts_column_name == ts]
+                        ts_data = fetched_data.loc[ts_column_name == str(ts)]
+                        ts_data = ts_data.squeeze()
+                        ts_data = ts_data.fillna('')
+                        break
+                pass
+            except Exception as e:
+                print('Enter Time Stamp in valid format: YYYY-MM-DD HH:MM:SS')
+                continue
             plot_data = StationModelPlot.parameter_validation(ts_data, fetched_data_columns)
             if ip == 'f':
                 plot_data['station_id'] = st_id
