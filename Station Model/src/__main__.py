@@ -6,8 +6,11 @@ def main():
     obtain_method = {'fetch_data': 'Enter Valid Station ID to fetch data:\t',
                      'upload_data_file': 'Enter Path to file or File as object:\t'
                      }
-    parameter_abb = {
+    abbreviations = {
         'date_time': ['valid', 'time', 'date_time', 'time1', 'time_stamp', 'DATE_TIME'],
+        'pressure': ['PRESSURE', 'pres', 'mslp', 'atmospheric_pressure', 'air_pressure_at_sea_level'],
+        'present_weather': ['coco', 'current_weather', 'wxcodes', 'current_wx1', 'current_wx1_symbol',
+                            'present_weather']
     }
     while True:
         ip = input(
@@ -40,24 +43,56 @@ def main():
             pass
         else:
             continue
-        date_abbreviations = {'date_time': ['valid', 'time', 'date_time', 'time1', 'time_stamp', 'DATE_TIME']}
         while True:
             try:
-                for iter in range(len(date_abbreviations['date_time'])):
-                    idx = date_abbreviations['date_time'][iter]
-                    if idx in fetched_data_columns:
-                        ts_column_name = fetched_data[idx]
+                for iteration2 in range(len(abbreviations['date_time'])):
+                    ts_column = abbreviations['date_time'][iteration2]
+                    if ts_column in fetched_data_columns:
+                        ts_column_values = fetched_data[ts_column]
                         ts = StationModelPlot.get_time_stamp(input(
-                            f'Enter Time Stamp from {ts_column_name} in the format: "YYYY-MM-DD HH:MM:SS ex. 2022-01-10 00:00:00 --: \n'))
-                        ts_data = fetched_data.loc[ts_column_name == ts]
-                        ts_data = fetched_data.loc[ts_column_name == str(ts)]
+                            f'Enter Time Stamp from {ts_column_values} in the format: "YYYY-MM-DD HH:MM:SS ex. 2022-01-10 00:00:00 --: \n'))
+                        ts_data = fetched_data.loc[ts_column_values == ts]
+                        ts_data = fetched_data.loc[ts_column_values == str(ts)]
                         ts_data = ts_data.squeeze()
                         ts_data = ts_data.fillna('')
                         break
+                # pres_value_dict = dict()
+                # weather_3hrs_ago = None
+                # idx = fetched_data.index[fetched_data['date_time'] == ts].to_list()
+                # if idx[0] - 3 >= 3:
+                #     print(idx[0])
+                # loop = 3
+                # while loop > 0:
+                #     for iteration in abbreviations['pressure']:
+                #         print(iteration)
+                #         if iteration in fetched_data_columns:
+                #             print(iteration)
+                #             if (int(idx[0]) - loop) >= 0:
+                #                 pres_value_dict[loop] = fetched_data[iteration][(idx[0] - loop)]
+                #                 loop -= 1
+                #                 break
+                #             else:
+                #                 break
+                #         else:
+                #             break
+                #     break
+                # for iteration1 in abbreviations['present_weather']:
+                #     if iteration1 in fetched_data_columns:
+                #         print(iteration1)
+                #         if (int(idx[0]) - 3) >= 0:
+                #             weather_3hrs_ago = fetched_data[iteration1][idx[0] - 3]
+                #             break
+                #         else:
+                #             break
+                #     else:
+                #         break
+
                 pass
             except Exception as e:
                 print('Enter Time Stamp in valid format: YYYY-MM-DD HH:MM:SS')
                 continue
+            print(weather_3hrs_ago)
+            print(pres_value_dict)
             plot_data = StationModelPlot.parameter_validation(ts_data, fetched_data_columns)
             if ip == 'f':
                 plot_data['station_id'] = st_id
@@ -73,11 +108,12 @@ if __name__ == '__main__':
     cv2.waitKey(10)
     img = cv2.imread(path_to_model)
     cv2.imshow('Station Model', img)
-    key = cv2.waitKey(0) & 0xFF
+    key = cv2.waitKey(0)
     # if k == 27:  # close on ESC key
     #     cv2.destroyAllWindows()
-    if key > -1:
+    if key > -1 & 0xFF:
         cv2.destroyAllWindows()
+    cv2.destroyAllWindows()
 # /home/hp/example_metar.txt
 # 2023-04-29 05:51:00
 # 2023-04-29 07:08:00

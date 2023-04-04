@@ -68,13 +68,17 @@ class StationModelPlot:
             weather_data = extension_read['nc'](self.path_to_file, engine="netcdf4")
             weather_data = weather_data.metpy.parse_cf()
             weather_data = weather_data.to_dataframe()
-            weather_data = weather_data.reset_index()
+            try:
+                weather_data = weather_data.reset_index()
+            except Exception as e:
+                weather_data = weather_data.reset_index(drop=True)
             data_parameters = list(weather_data.columns.values)
         else:
             weather_data = extension_read[extension](self.path_to_file)
-            if extension == 'csv':
+            try:
                 weather_data = weather_data.reset_index()
-            # weather_data = weather_data.reset_index()
+            except Exception as e:
+                weather_data = weather_data.reset_index(drop=True)
             data_parameters = list(weather_data.columns.values)
         return weather_data, data_parameters
 
@@ -135,8 +139,9 @@ class StationModelPlot:
                     not_available_parameters.append(iteration)
 
         if len(not_available_parameters) > 0:
-            user_parameter = input(f'''parameter abbreviations {not_available_parameters} are not recognized to plot data, Please
-                                select the parameter from {parameter_keys} to add an abbreviation:\t''')
+            user_parameter = input(f"parameter abbreviations {not_available_parameters} "
+                                   f"are not recognized to plot data, Please select the "
+                                   f"parameter from {parameter_keys} to add an abbreviation:\t")
             if user_parameter in parameter_keys:
                 user_added_abbreviation = input('Enter abbreviation for the selected parameter:\t')
                 parameter_abbreviations[user_parameter].append(user_added_abbreviation)
@@ -200,8 +205,10 @@ class StationModelPlot:
                          "bbox=dict(boxstyle='round',facecolor='turquoise', alpha=0.5))",
 
             # to add past_weather symbol to the model
-            'past_weather': "[sp.plot_symbol((2, -3.5), codes=[int(data['past_weather']], symbol_mapper=current_weather,va='center', ha='center', fontsize=25, "
-                            "sp.plot_symbol((2, -3.5), codes=[wx_code_map[data['past_weather']]], symbol_mapper=current_weather,va='center', ha='center', fontsize=25]",
+            'past_weather': "[sp.plot_symbol((2, -3.5), codes=[int(data['past_weather']], "
+                            "symbol_mapper=current_weather,va='center', ha='center', fontsize=25, "
+                            "sp.plot_symbol((2, -3.5), codes=[wx_code_map[data['past_weather']]], "
+                            "symbol_mapper=current_weather,va='center', ha='center', fontsize=25]",
 
             # to add precipitation to the model
             'precipitation': "sp.plot_text((2, -5.5), text=[str(data['precipitation'])], fontsize=13)",
@@ -238,6 +245,7 @@ class StationModelPlot:
 
         name = 'Station_model.jpeg'
         path = os.path.join(os.path.dirname('output'), name)
+        plt.axis('off')
         plt.savefig(path, dpi=100)
 
         return path
@@ -249,4 +257,3 @@ class StationModelPlot:
         return ts
     # @staticmethod
     # def calculable_data(data, data_columns, timestamp_column, timestamp):
-
