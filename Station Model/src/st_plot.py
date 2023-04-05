@@ -157,10 +157,11 @@ class StationModelPlot:
         :return: Path to Image containing Station Model
         """
         fig, ax = plt.subplots(figsize=(10, 10))
-        sp = StationPlot(ax, 0, 0, fontsize=13, spacing=25)
+        sp = StationPlot(ax, 0, 0, fontsize=18, spacing=25)
         ax.set_xlim(-8, 8)
         ax.set_ylim(-8, 8)
-        ax.set_title('Station Model')
+        ax.set_title('Station Model',fontsize=22, bbox=dict(boxstyle='square',facecolor='white', alpha=0.3)
+                     , weight='heavy', family='monospace')
         station_square = plt.Rectangle((-6, -6), 12, 12, fc='white', ec="k")
         # ax.set_aspect()
         ax.add_patch(station_square)
@@ -189,7 +190,7 @@ class StationModelPlot:
             'cloud_height': "ax.text(-2, -3.5, s=str(data['cloud_height']), fontsize=13)",
 
             # to add dew_point_temperature to the model
-            'dew_point_temperature': "ax.text(-3.5, -2.5, "
+            'dew_point_temperature': "ax.text(-3.5, -3, "
                                      "s=str(data['dew_point_temperature']) + '°C', fontsize=13)",
 
             # to add high_clouds symbol to the model
@@ -197,7 +198,7 @@ class StationModelPlot:
                           " bbox=dict(boxstyle='round',facecolor='turquoise', alpha=0.7))",
 
             # to add low_clouds symbol to the model
-            'low_cloud': "ax.text(-1.7, -2.5, s = str(data['low_cloud']), fontsize=13,"
+            'low_cloud': "ax.text(-1.7, -3, s = str(data['low_cloud']), fontsize=13,"
                          "bbox=dict(boxstyle='round',facecolor='turquoise', alpha=0.2))",
 
             # to add mid_clouds symbol to the model
@@ -205,10 +206,8 @@ class StationModelPlot:
                          "bbox=dict(boxstyle='round',facecolor='turquoise', alpha=0.5))",
 
             # to add past_weather symbol to the model
-            'past_weather': "[sp.plot_symbol((2, -3.5), codes=[int(data['past_weather']], "
-                            "symbol_mapper=current_weather,va='center', ha='center', fontsize=25, "
-                            "sp.plot_symbol((2, -3.5), codes=[wx_code_map[data['past_weather']]], "
-                            "symbol_mapper=current_weather,va='center', ha='center', fontsize=25]",
+            'past_weather': "sp.plot_symbol((2, -3.5), codes=[int(data['past_weather'])], "
+                            "symbol_mapper=current_weather,va='center', ha='center', fontsize=25) ",
 
             # to add precipitation to the model
             'precipitation': "sp.plot_text((2, -5.5), text=[str(data['precipitation'])], fontsize=13)",
@@ -224,7 +223,7 @@ class StationModelPlot:
             'pressure_difference': "sp.plot_text((4, 0), text=[str(data['pressure_difference'])], fontsize=13)",
 
             # to add sky_cover_of the lowest cloud to the model
-            'sky_cover_at_lowest_cloud': "ax.text(-0.2, -2.5, "
+            'sky_cover_at_lowest_cloud': "ax.text(-0.2, -3, "
                                          "s=str(data['sky_cover_at_lowest_cloud']), fontsize=13)",
 
             # to add temperature to the model
@@ -234,10 +233,12 @@ class StationModelPlot:
             'visibility_distance': "ax.text(-4.5, 0, s=str(round(data['visibility_distance'])), fontsize=13)",
 
             # adds Station_ID to the model
-            'station_id': "ax.text(2.8, 6.7, s =('Station ID: ' + data['station_id']), fontsize=13, weight=10)",
+            'station_id': "ax.text(2.8, 6.7, "
+                          "s =('Station ID: ' + data['station_id']), fontsize=13)",
 
-            'date_time': "ax.text(-0.5, 6.2, s = ('Date & Time:' + str(data['date_time']).rstrip('Timestamp()'))"
-                         ", fontsize = 13, weight=10)"
+            'date_time': "ax.text(-0.5, 6.2, "
+                         "s = ('Date & Time:' + str(data['date_time']).rstrip('Timestamp()'))"
+                         ", fontsize = 13)"
         }
         for key, value in data.items():
             if key in plot_dictionary:
