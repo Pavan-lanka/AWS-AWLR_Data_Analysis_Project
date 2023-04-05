@@ -49,14 +49,14 @@ def main():
                     ts_column = abbreviations['date_time'][iteration2]
                     if ts_column in fetched_data_columns:
                         ts_column_values = fetched_data[ts_column]
-                        ts = StationModelPlot.get_time_stamp(input(
+                        time_stamp = StationModelPlot.get_time_stamp(input(
                             f'Enter Time Stamp from {ts_column_values} in the format: "YYYY-MM-DD HH:MM:SS ex. 2022-01-10 00:00:00 --: \n'))
-                        if len(ts_column_values) > 0 and type(ts_column_values[0]) == str:
-                            ts_data = fetched_data.loc[ts_column_values == str(ts)]
-                            idx = fetched_data.index[fetched_data['date_time'] == str(ts)].to_list()
-                        else:
-                            ts_data = fetched_data.loc[ts_column_values == ts]
-                            idx = fetched_data.index[fetched_data['date_time'] == ts].to_list()
+                        if len(ts_column_values) > 0 and isinstance(ts_column_values[0], str):
+                            ts_data = fetched_data.loc[ts_column_values == str(time_stamp)]
+                            idx = fetched_data.index[ts_column_values == str(time_stamp)].to_list()
+                        elif len(ts_column_values) > 0:
+                            ts_data = fetched_data.loc[ts_column_values == time_stamp]
+                            idx = fetched_data.index[ts_column_values == time_stamp].to_list()
                         ts_data = ts_data.squeeze()
                         ts_data = ts_data.fillna('')
                         break
@@ -68,7 +68,7 @@ def main():
                     elif iteration in fetched_data_columns:
                         loop = 3
                         while loop > 0:
-                            if (idx[0] - loop) >= 0:
+                            if len(idx) > 0 and (idx[0] - loop) >= 0:
                                 pres_value_dict[loop] = fetched_data[iteration][idx[0] - loop]
                                 loop -= 1
                             else:
@@ -78,16 +78,25 @@ def main():
                     if iteration1 not in fetched_data_columns:
                         pass
                     elif iteration1 in fetched_data_columns:
-                        if (int(idx[0]) - 3) >= 0:
+                        if len(idx) > 0 and (idx[0] - 3) >= 0:
                             weather_3hrs_ago = fetched_data[iteration1][idx[0] - 3]
                         else:
+                            weather_3hrs_ago = 0
                             pass
 
                 pass
             except Exception as e:
                 print(e)
                 continue
+            #/home/hp/PycharmProjects/AWS-AWLR_Data_Analysis_Project/Station Model/data/test/weather_data.csv
             plot_data = StationModelPlot.parameter_validation(ts_data, fetched_data_columns)
+            print(plot_data)
+            pres_value_dict[0] = plot_data['pressure']
+            pressure_change, pressure_difference = StationModelPlot.press_values(pres_value_dict)
+            if pressure_change != '':
+                plot_data['pressure_change'] = pressure_change
+            if pressure_difference >= 0:
+                plot_data['pressure_difference'] = pressure_difference
             plot_data['past_weather'] = weather_3hrs_ago
             if ip == 'f':
                 plot_data['station_id'] = st_id
@@ -113,3 +122,5 @@ if __name__ == '__main__':
 # 2023-04-29 05:51:00
 # 2023-04-29 07:08:00
 # /home/hp/PycharmProjects/AWS-AWLR_Data_Analysis_Project/Station Model/data/test/weather_data.csv
+# 2023-04-05 12:51:00
+# 2022-01-10 04:00:00

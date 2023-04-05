@@ -167,8 +167,8 @@ class StationModelPlot:
         ax.add_patch(station_square)
         plot_dictionary = {
             # to add pressure_tendency symbol to the model
-            'pressure_tendency': '''sp.plot_symbol((5, 0), codes=[data['pressure_tendency']],
-                                symbol_mapper=pressure_tendency,va='center', ha='center', fontsize=25)''',
+            'pressure_tendency': "sp.plot_symbol((5, 0), codes=[data['pressure_tendency']],"
+                                 "symbol_mapper=pressure_tendency,va='center', ha='center', fontsize=25)",
 
             # to add Sky_cover symbol to the model
             'sky_cover': "sp.plot_symbol((0, 0), codes=[data['sky_cover']], symbol_mapper=sky_cover, fontsize=25)",
@@ -237,7 +237,7 @@ class StationModelPlot:
                           "s =('Station ID: ' + data['station_id']), fontsize=13)",
 
             'date_time': "ax.text(-0.5, 6.2, "
-                         "s = ('Date & Time:' + str(data['date_time']).rstrip('Timestamp()'))"
+                         "s = ('Date & Time:' + '' + str(data['date_time']).rstrip('Timestamp()'))"
                          ", fontsize = 13)"
         }
         for key, value in data.items():
@@ -254,7 +254,35 @@ class StationModelPlot:
     @staticmethod
     def get_time_stamp(time_stamp_string):
         """get_time_stamp method accepts argument as String in the format --> 'YYYY-MM-DD HH:MM' """
-        ts = dt.strptime(time_stamp_string, '%Y-%m-%d %H:%M:%S')
+        if len(time_stamp_string) == 16:
+            ts = dt.strptime(time_stamp_string, '%Y-%m-%d %H:%M')
+        elif len(time_stamp_string) == 19:
+            ts = dt.strptime(time_stamp_string, '%Y-%m-%d %H:%M:%S')
         return ts
-    # @staticmethod
-    # def calculable_data(data, data_columns, timestamp_column, timestamp):
+
+    @staticmethod
+    def press_values(pres_dict: dict):
+        """"""
+        pres_change = ''
+        pres_diff = None
+        if len(pres_dict) >= 3:
+            pres_3 = int(pres_dict[3])
+            pres_2 = int(pres_dict[2])
+            pres_1 = int(pres_dict[1])
+            pres_0 = int(pres_dict[0])
+            delta_1 = pres_3 - pres_2
+            delta_2 = pres_2 - pres_1
+            delta_3 = pres_1 - pres_0
+            delta_4 = delta_1 - delta_2
+            delta_5 = delta_2 - delta_3
+            delta_6 = delta_4 - delta_5
+            if delta_6 == 0:
+                pres_change = '±'
+            elif delta_6 > 0:
+                pres_change = '+'
+            elif delta_6 < 0:
+                pres_change = '-'
+            pres_diff = abs(delta_6)
+            return pres_change, pres_diff
+        else:
+            return pres_change, pres_diff
