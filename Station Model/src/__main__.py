@@ -51,24 +51,25 @@ def main():
                         ts_column_values = fetched_data[ts_column]
                         ts = StationModelPlot.get_time_stamp(input(
                             f'Enter Time Stamp from {ts_column_values} in the format: "YYYY-MM-DD HH:MM:SS ex. 2022-01-10 00:00:00 --: \n'))
-                        if type(ts_column_values[0]) == str:
+                        if len(ts_column_values) > 0 and type(ts_column_values[0]) == str:
                             ts_data = fetched_data.loc[ts_column_values == str(ts)]
+                            idx = fetched_data.index[fetched_data['date_time'] == str(ts)].to_list()
                         else:
                             ts_data = fetched_data.loc[ts_column_values == ts]
+                            idx = fetched_data.index[fetched_data['date_time'] == ts].to_list()
                         ts_data = ts_data.squeeze()
                         ts_data = ts_data.fillna('')
                         break
                 pres_value_dict = dict()
                 weather_3hrs_ago = None
-                idx = fetched_data.index[fetched_data['date_time'] == ts].to_list()
                 for iteration in abbreviations['pressure']:
                     if iteration not in fetched_data_columns:
                         pass
                     elif iteration in fetched_data_columns:
                         loop = 3
                         while loop > 0:
-                            if (int(idx[0]) - loop) >= 0:
-                                pres_value_dict[loop] = fetched_data[iteration][(idx[0] - loop)]
+                            if (idx[0] - loop) >= 0:
+                                pres_value_dict[loop] = fetched_data[iteration][idx[0] - loop]
                                 loop -= 1
                             else:
                                 break
@@ -84,10 +85,8 @@ def main():
 
                 pass
             except Exception as e:
-                print('Enter Time Stamp in valid format: YYYY-MM-DD HH:MM:SS')
+                print(e)
                 continue
-            print(weather_3hrs_ago)
-            print(pres_value_dict)
             plot_data = StationModelPlot.parameter_validation(ts_data, fetched_data_columns)
             plot_data['past_weather'] = weather_3hrs_ago
             if ip == 'f':
