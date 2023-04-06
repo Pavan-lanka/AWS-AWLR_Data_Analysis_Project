@@ -69,7 +69,7 @@ def main():
                         loop = 3
                         while loop > 0:
                             if len(idx) > 0 and (idx[0] - loop) >= 0:
-                                pres_value_dict[loop] = fetched_data[iteration][idx[0] - loop]
+                                pres_value_dict[loop] = int(fetched_data[iteration][idx[0] - loop])
                                 loop -= 1
                             else:
                                 break
@@ -90,13 +90,21 @@ def main():
                 continue
             #/home/hp/PycharmProjects/AWS-AWLR_Data_Analysis_Project/Station Model/data/test/weather_data.csv
             plot_data = StationModelPlot.parameter_validation(ts_data, fetched_data_columns)
-            print(plot_data)
-            pres_value_dict[0] = plot_data['pressure']
-            pressure_change, pressure_difference = StationModelPlot.press_values(pres_value_dict)
-            if pressure_change != '':
-                plot_data['pressure_change'] = pressure_change
-            if pressure_difference != None:
-                plot_data['pressure_difference'] = pressure_difference
+            pres_value_dict[0] = int(plot_data['pressure'])
+            print(pres_value_dict)
+            pres_values = StationModelPlot.press_values(pres_value_dict)
+            if len(pres_values) == 3:
+                if pres_values[0] != '':
+                    plot_data['pressure_change'] = pres_values[0]
+                if pres_values[1] != None:
+                    plot_data['pressure_difference'] = pres_values[1]
+                if pres_values[2] >= 0:
+                    plot_data['pressure_tendency'] = pres_values[2]
+            elif len(pres_values) == 2:
+                if pres_values[0] != '':
+                    plot_data['pressure_change'] = pres_values[0]
+                if pres_values[1] != None:
+                    plot_data['pressure_difference'] = pres_values[1]
             plot_data['past_weather'] = weather_3hrs_ago
             if ip == 'f':
                 plot_data['station_id'] = st_id

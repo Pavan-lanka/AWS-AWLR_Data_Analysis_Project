@@ -104,8 +104,8 @@ class StationModelPlot:
             'cloud_height': ['skyl1', 'skyl2', 'skyl3', 'skyl4', 'highest_cloud_level', 'high_cloud_level',
                              'medium_cloud_level', 'low_cloud_level'],
             'pressure': ['PRESSURE', 'pres', 'mslp', 'atmospheric_pressure', 'air_pressure_at_sea_level'],
-            'high_cloud': ['high_cloud_type', 'skyc3', 'high_cloud'],
-            'mid_cloud': ['mid_cloud_type', 'skyc2', 'mid_cloud'],
+            'high_cloud': ['highest_cloud_type', 'skyc3', 'high_cloud'],
+            'mid_cloud': ['medium_cloud_type', 'skyc2', 'mid_cloud'],
             'low_cloud': ['low_cloud_type', 'skyc1', 'low_cloud'],
             'sky_cover': ['cloud_coverage', 'skyc1', 'sky_cover'],
             'visibility_distance': ['visibility', 'vsby', 'visibility_distance'],
@@ -116,8 +116,8 @@ class StationModelPlot:
             'pressure_change': [],
             'pressure_difference': [],
             'precipitation': ['p01i', 'prcp', 'PRECIPITATION', 'precipitation'],
-            'sky_cover_at_lowest_cloud': ['skyl1', 'SKY_COVER_AT_LOWEST_CLOUD', 'sky_cover_at_lowest_cloud',
-                                          'cloud_coverage']
+            'sky_cover_at_lowest_cloud': ['SKY_COVER_AT_LOWEST_CLOUD', 'sky_cover_at_lowest_cloud',
+                                          'cloud_coverage', 'skyl1']
         }
         parameter_keys = list(parameter_abbreviations.keys())
         parameter_abb_list = list(parameter_abbreviations.values())
@@ -160,14 +160,14 @@ class StationModelPlot:
         sp = StationPlot(ax, 0, 0, fontsize=18, spacing=25)
         ax.set_xlim(-8, 8)
         ax.set_ylim(-8, 8)
-        ax.set_title('Station Model',fontsize=22, bbox=dict(boxstyle='square',facecolor='white', alpha=0.3)
+        ax.set_title('Station Model', fontsize=22, bbox=dict(boxstyle='square', facecolor='white', alpha=0.3)
                      , weight='heavy', family='monospace')
         station_square = plt.Rectangle((-6, -6), 12, 12, fc='white', ec="k")
         # ax.set_aspect()
         ax.add_patch(station_square)
         plot_dictionary = {
             # to add pressure_tendency symbol to the model
-            'pressure_tendency': "sp.plot_symbol((5, 0), codes=[data['pressure_tendency']],"
+            'pressure_tendency': "sp.plot_symbol((6, 0.3), codes=[data['pressure_tendency']],"
                                  "symbol_mapper=pressure_tendency,va='center', ha='center', fontsize=25)",
 
             # to add Sky_cover symbol to the model
@@ -184,7 +184,7 @@ class StationModelPlot:
             # to add wind speed in knots at the end of the barb
             'wind_direction': "ax.text(-1 * np.sin(np.radians(data['wind_direction'])),"
                               "-1 * np.cos(np.radians(data['wind_direction'])),str(data['wind_speed']) + ' kts',"
-                              "ha='center', va='bottom', rotation=0, fontsize=10, alpha=0.3)",
+                              "ha='center', va='bottom', fontsize=10, alpha=0.3)",
 
             # to add height of the cloud base
             'cloud_height': "ax.text(-2, -3.5, s=str(data['cloud_height']), fontsize=13)",
@@ -217,10 +217,10 @@ class StationModelPlot:
                                "symbol_mapper=current_weather,va='center', ha='center', fontsize=25)",
 
             # to add pressure_change to the model
-            'pressure_change': "sp.plot_text((3.2, 0), text=[str(data['pressure_change'])], fontsize=13)",
+            'pressure_change': "ax.text(3, 0, s=str(data['pressure_change']), fontsize=15, weight='bold')",
 
             # to add pressure_difference to the model
-            'pressure_difference': "sp.plot_text((4, 0), text=[str(data['pressure_difference'])], fontsize=13)",
+            'pressure_difference': "ax.text(3.5, 0, s=str(data['pressure_difference']), fontsize=13)",
 
             # to add sky_cover_of the lowest cloud to the model
             'sky_cover_at_lowest_cloud': "ax.text(-0.2, -3, "
@@ -263,26 +263,40 @@ class StationModelPlot:
     @staticmethod
     def press_values(pres_dict: dict):
         """"""
+        pres_tend = -1
         pres_change = ''
         pres_diff = None
         if len(pres_dict) >= 3:
-            pres_3 = int(pres_dict[3])
-            pres_2 = int(pres_dict[2])
-            pres_1 = int(pres_dict[1])
-            pres_0 = int(pres_dict[0])
-            delta_1 = pres_3 - pres_2
-            delta_2 = pres_2 - pres_1
-            delta_3 = pres_1 - pres_0
-            delta_4 = delta_1 - delta_2
-            delta_5 = delta_2 - delta_3
-            delta_6 = delta_4 - delta_5
-            if delta_6 == 0:
+            p4 = pres_dict[3]
+            p3 = pres_dict[2]
+            p2 = pres_dict[1]
+            p1 = pres_dict[0]
+            pres_diff = p4 - p1
+            if pres_diff == 0:
                 pres_change = '±'
-            elif delta_6 > 0:
-                pres_change = '+'
-            elif delta_6 < 0:
+            elif pres_diff > 0:
                 pres_change = '-'
-            pres_diff = abs(delta_6)
-            return pres_change, pres_diff
+            elif pres_diff < 0:
+                pres_change = '+'
+            if p1 - p4 <= 3 & p3 - p4 >= 1:
+                pres_tend = 0
+            elif p1 - p4 > 0 & (p2 - p1 <= 1 and p3 - p2 <=1):
+                pres_tend = 1
+            elif p1 - p4 >= 3 and (p1 - p2 >= 1 and p2 - p3 >= 1):
+                pres_tend = 2
+            elif p4 - p3 > 0 & p4 - p1 < -3:
+                pres_tend = 3
+            elif (p4 == p3 == p2 == p1) or abs(p4 - p1) <= 1:
+                pres_tend = 4
+            elif (p4 - p1 < 0 & p4 - p3 >= -1) & abs(p4 - p3) <= 1:
+                pres_tend = 5
+            elif (p4 - p1) / 3 > -1 & p4 - p1 < 0:
+                pres_tend = 6
+            elif (p4 - p1 <= -3) or p4 > p3 > p2 > p1:
+                pres_tend = 7
+            elif p4 - p1 < 0 & p4 - p1 > -3:
+                pres_tend = 8
+
+            return pres_change, abs(int(pres_diff)), pres_tend
         else:
             return pres_change, pres_diff
