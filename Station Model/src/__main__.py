@@ -95,7 +95,7 @@ def main():
             pressure_change, pressure_difference = StationModelPlot.press_values(pres_value_dict)
             if pressure_change != '':
                 plot_data['pressure_change'] = pressure_change
-            if pressure_difference >= 0:
+            if pressure_difference != None:
                 plot_data['pressure_difference'] = pressure_difference
             plot_data['past_weather'] = weather_3hrs_ago
             if ip == 'f':
