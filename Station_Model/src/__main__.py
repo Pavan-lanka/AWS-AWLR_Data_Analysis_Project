@@ -1,3 +1,5 @@
+import warnings
+
 from st_plot import StationModelPlot
 import cv2
 
@@ -12,6 +14,34 @@ def main():
         'present_weather': ['coco', 'current_weather', 'wxcodes', 'current_wx1', 'current_wx1_symbol',
                             'present_weather']
     }
+    meteostat_weather_code_map = {1: 0,
+                                  2: 0,
+                                  3: 0,
+                                  4: 0,
+                                  5: 45,
+                                  6: 49,
+                                  7: 61,
+                                  8: 63,
+                                  9: 65,
+                                  10: 66,
+                                  11: 67,
+                                  12: 68,
+                                  13: 69,
+                                  14: 71,
+                                  15: 73,
+                                  16: 75,
+                                  17: 80,
+                                  18: 81,
+                                  19: 0,
+                                  20: 0,
+                                  21: 85,
+                                  22: 86,
+                                  23: 0,
+                                  24: 90,
+                                  25: 17,
+                                  26: 97,
+                                  27: 31
+                                  }
     while True:
         ip = input(
             f'''Enter a method from below: \n {list(obtain_method.keys())[0]}:(f), {list(obtain_method.keys())[1]}(u):\n''')
@@ -82,7 +112,6 @@ def main():
             except Exception as e:
                 print(e)
                 continue
-            #/home/hp/PycharmProjects/AWS-AWLR_Data_Analysis_Project/Station Model/data/test/weather_data.csv
             plot_data = StationModelPlot.parameter_validation(ts_data, fetched_data_columns)
             pres_value_dict[0] = int(plot_data['pressure'])
             print(pres_value_dict)
@@ -101,10 +130,16 @@ def main():
                 if pres_values[1] != None:
                     plot_data['pressure_difference'] = pres_values[1]
             plot_data['past_weather'] = weather_3hrs_ago
-
             if ip == 'f':
                 plot_data['station_id'] = st_id
-
+                meteo_weather_code = plot_data['present_weather'] if plot_data['present_weather'] >= 0 else 0
+                if meteo_weather_code in meteostat_weather_code_map:
+                    plot_data['present_weather'] = meteostat_weather_code_map[meteo_weather_code]
+                    plot_data['past_weather'] = meteostat_weather_code_map[weather_3hrs_ago]
+                    if meteo_weather_code == 0:
+                        plot_data['present_weather'] = 0
+                        raise warnings.warn(f"The Present Weather and Past Weather "
+                                            "data is Inaccurate in Meteostat API for the current weather symbol")
             path = StationModelPlot.plot_station_model(data=plot_data)
 
             break

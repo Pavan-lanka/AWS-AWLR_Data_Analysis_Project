@@ -264,9 +264,9 @@ class StationModelPlot:
 
         pressure_diff = p_curr - p_prev
         if pressure_diff > 0:
-            return '-'
+            return '-', pressure_diff
         elif pressure_diff < 0:
-            return '+'
+            return '+', pressure_diff
         return '±', pressure_diff
 
     @staticmethod
