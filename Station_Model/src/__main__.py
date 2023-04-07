@@ -24,13 +24,13 @@ def main():
                 input("Enter End time in format: 'YYYY-MM-DD HH:MM:SS ex. 2022-01-20 00:00:00 --:\n"))
             freq = input("Enter observation Frequency from list [Hourly, Daily] : \t")
             try:
-                fetched_data, fetched_data_columns = st.fetch_station_data(start_time=st_time, end_time=ed_time,
+                fetched_data, fetched_data_columns = st.fetch_station_data(start_time=st_time,
+                                                                           end_time=ed_time,
                                                                            obs_frequency=freq)
                 fetched_data = fetched_data.fillna('')
             except Exception as e:
                 print('Please Enter Valid Station ID , Valid Start time and End time in format: YYYY-MM-DD HH:MM:SS')
                 continue
-            pass
         elif ip.lower() == 'u':
             pt_to_file = input(obtain_method['upload_data_file'])
             try:
@@ -40,7 +40,6 @@ def main():
             except Exception as e:
                 print('Entered Path File is Incorrect please enter a valid file path, or file as an object')
                 continue
-            pass
         else:
             continue
         while True:
@@ -63,9 +62,8 @@ def main():
                 pres_value_dict = dict()
                 weather_3hrs_ago = None
                 for iteration in abbreviations['pressure']:
-                    if iteration not in fetched_data_columns:
-                        pass
-                    elif iteration in fetched_data_columns:
+                    # if iteration not in fetched_data_columns:
+                    if iteration in fetched_data_columns:
                         loop = 3
                         while loop > 0:
                             if len(idx) > 0 and (idx[0] - loop) >= 0:
@@ -73,17 +71,14 @@ def main():
                                 loop -= 1
                             else:
                                 break
-                        pass
                 for iteration1 in abbreviations['present_weather']:
-                    if iteration1 not in fetched_data_columns:
-                        pass
-                    elif iteration1 in fetched_data_columns:
+                    # if iteration1 not in fetched_data_columns:
+                    #     continue
+                    if iteration1 in fetched_data_columns:
                         if len(idx) > 0 and (idx[0] - 3) >= 0:
                             weather_3hrs_ago = fetched_data[iteration1][idx[0] - 3]
                         else:
                             weather_3hrs_ago = 0
-                            pass
-                pass
             except Exception as e:
                 print(e)
                 continue
@@ -109,6 +104,7 @@ def main():
 
             if ip == 'f':
                 plot_data['station_id'] = st_id
+
             path = StationModelPlot.plot_station_model(data=plot_data)
 
             break
@@ -122,14 +118,6 @@ if __name__ == '__main__':
     img = cv2.imread(path_to_model)
     cv2.imshow('Station Model', img)
     key = cv2.waitKey(0)
-    # if k == 27:  # close on ESC key
-    #     cv2.destroyAllWindows()
+
     if key > -1 & 0xFF:
         cv2.destroyAllWindows()
-    cv2.destroyAllWindows()
-# /home/hp/example_metar.txt
-# 2023-04-29 05:51:00
-# 2023-04-29 07:08:00
-# /home/hp/PycharmProjects/AWS-AWLR_Data_Analysis_Project/Station Model/data/test/weather_data.csv
-# 2023-04-05 12:51:00
-# 2022-01-10 04:00:00

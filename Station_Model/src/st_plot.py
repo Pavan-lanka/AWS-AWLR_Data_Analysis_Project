@@ -180,7 +180,7 @@ class StationModelPlot:
             # u = [-wind_speed * np.sin(np.radians(wind_direction))] U component of wind barb
             # v = [-wspd_mps * math.cos(np.radians(wind_direction))] V component of wind barb
             'wind_speed': "sp.plot_barb(u=[-(data['wind_speed']) * np.sin(np.radians(data['wind_direction']))],"
-                          "v=[-(data['wind_speed']) * np.cos(np.radians(data['wind_direction']))], length=11)",
+                          "v=[-(data['wind_speed']) * np.cos(np.radians(data['wind_direction']))], length=10)",
             # to add wind speed in knots at the end of the barb
             'wind_direction': "ax.text(-1 * np.sin(np.radians(data['wind_direction'])),"
                               "-1 * np.cos(np.radians(data['wind_direction'])),str(data['wind_speed']) + ' kts',"
@@ -260,43 +260,45 @@ class StationModelPlot:
             ts = dt.strptime(time_stamp_string, '%Y-%m-%d %H:%M:%S')
         return ts
 
-    @staticmethod
-    def press_values(pres_dict: dict):
-        """"""
-        pres_tend = -1
-        pres_change = ''
-        pres_diff = None
-        if len(pres_dict) >= 3:
-            p4 = pres_dict[3]
-            p3 = pres_dict[2]
-            p2 = pres_dict[1]
-            p1 = pres_dict[0]
-            pres_diff = p4 - p1
-            if pres_diff == 0:
-                pres_change = '±'
-            elif pres_diff > 0:
-                pres_change = '-'
-            elif pres_diff < 0:
-                pres_change = '+'
-            if p1 >= p4 and (p3 - p4 >= 3 and p2 - p3 >= 3):
-                pres_tend = 0
-            elif p1 - p4 >= 1 and (p1 - p2 < 3 and p2 - p3 < 3):
-                pres_tend = 1
-            elif (p1 - p4 > 3 and (p1 - p2 > 3 and p2 - p3 > 3)) or p4 < p3 < p2 < p1:
-                pres_tend = 2
-            elif p1 - p4 > 1 and (p1 - p2 >= 3 and p3 - p2 >= 3):
-                pres_tend = 3
-            elif (p4 == p3 == p2 == p1) or abs(p1 - p4) <= 1:
-                pres_tend = 4
-            elif p1 <= p4 and (p4 - p3 >= 3 and p3 - p2 >= 3):
-                pres_tend = 5
-            elif p4 - p1 > 1 and (p1 - p2 <= 1 and p2 - p3 <= 1):
-                pres_tend = 6
-            elif (p4 - p1 > 3 and (p2 - p1 >= 3 and p3 - p2 >= 3 and p4 - p3 >= 3)) or p4 > p3 > p2 > p1:
-                pres_tend = 7
-            elif p4 - p1 > 1 and (p2 - p1 >= 3 and p3 - p2 >= 3):
-                pres_tend = 8
+    def _get_pressure_change_symbol(p_curr, p_prev):
 
-            return pres_change, abs(int(pres_diff)), pres_tend
+        pressure_diff = p_curr - p_prev
+        if pressure_diff > 0:
+            return '-'
+        elif pressure_diff < 0:
+            return '+'
+        return '±', pressure_diff
+
+    @staticmethod
+    def press_values(pressure_dict: dict):
+        """"""
+        pressure_tend = -1
+        pressure_change_symbol = ''
+        if len(pressure_dict) == 4:
+            p4 = pressure_dict[3]
+            p3 = pressure_dict[2]
+            p2 = pressure_dict[1]
+            p1 = pressure_dict[0]
+            pressure_change_symbol, pressure_diff = StationModelPlot._get_pressure_change_symbol(p1, p4)
+            if p1 >= p4 and (p3 - p4 >= 3 and p2 - p3 >= 3):
+                pressure_tend = 0
+            elif p1 - p4 >= 1 and (p1 - p2 < 3 and p2 - p3 < 3):
+                pressure_tend = 1
+            elif (p1 - p4 > 3 and (p1 - p2 > 3 and p2 - p3 > 3)) or p4 < p3 < p2 < p1:
+                pressure_tend = 2
+            elif p1 - p4 > 1 and (p1 - p2 >= 3 and p3 - p2 >= 3):
+                pressure_tend = 3
+            elif (p4 == p3 == p2 == p1) or abs(p1 - p4) <= 1:
+                pressure_tend = 4
+            elif p1 <= p4 and (p4 - p3 >= 3 and p3 - p2 >= 3):
+                pressure_tend = 5
+            elif p4 - p1 > 1 and (p1 - p2 <= 1 and p2 - p3 <= 1):
+                pressure_tend = 6
+            elif (p4 - p1 > 3 and (p2 - p1 >= 3 and p3 - p2 >= 3 and p4 - p3 >= 3)) or p4 > p3 > p2 > p1:
+                pressure_tend = 7
+            elif p4 - p1 > 1 and (p2 - p1 >= 3 and p3 - p2 >= 3):
+                pressure_tend = 8
+
+            return pressure_change_symbol, abs(int(pressure_diff)), pressure_tend
         else:
-            return pres_change, pres_diff
+            return pressure_change_symbol, pressure_diff
