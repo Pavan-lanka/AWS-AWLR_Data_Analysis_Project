@@ -83,7 +83,6 @@ def main():
                         else:
                             weather_3hrs_ago = 0
                             pass
-
                 pass
             except Exception as e:
                 print(e)
@@ -100,12 +99,14 @@ def main():
                     plot_data['pressure_difference'] = pres_values[1]
                 if pres_values[2] >= 0:
                     plot_data['pressure_tendency'] = pres_values[2]
+                    print(plot_data['pressure_tendency'])
             elif len(pres_values) == 2:
                 if pres_values[0] != '':
                     plot_data['pressure_change'] = pres_values[0]
                 if pres_values[1] != None:
                     plot_data['pressure_difference'] = pres_values[1]
             plot_data['past_weather'] = weather_3hrs_ago
+
             if ip == 'f':
                 plot_data['station_id'] = st_id
             path = StationModelPlot.plot_station_model(data=plot_data)

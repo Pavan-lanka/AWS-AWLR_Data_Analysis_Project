@@ -278,23 +278,23 @@ class StationModelPlot:
                 pres_change = '-'
             elif pres_diff < 0:
                 pres_change = '+'
-            if p1 - p4 <= 3 & p3 - p4 >= 1:
+            if p1 >= p4 and (p3 - p4 >= 3 and p2 - p3 >= 3):
                 pres_tend = 0
-            elif p1 - p4 > 0 & (p2 - p1 <= 1 and p3 - p2 <=1):
+            elif p1 - p4 >= 1 and (p1 - p2 < 3 and p2 - p3 < 3):
                 pres_tend = 1
-            elif p1 - p4 >= 3 and (p1 - p2 >= 1 and p2 - p3 >= 1):
+            elif (p1 - p4 > 3 and (p1 - p2 > 3 and p2 - p3 > 3)) or p4 < p3 < p2 < p1:
                 pres_tend = 2
-            elif p4 - p3 > 0 & p4 - p1 < -3:
+            elif p1 - p4 > 1 and (p1 - p2 >= 3 and p3 - p2 >= 3):
                 pres_tend = 3
-            elif (p4 == p3 == p2 == p1) or abs(p4 - p1) <= 1:
+            elif (p4 == p3 == p2 == p1) or abs(p1 - p4) <= 1:
                 pres_tend = 4
-            elif (p4 - p1 < 0 & p4 - p3 >= -1) & abs(p4 - p3) <= 1:
+            elif p1 <= p4 and (p4 - p3 >= 3 and p3 - p2 >= 3):
                 pres_tend = 5
-            elif (p4 - p1) / 3 > -1 & p4 - p1 < 0:
+            elif p4 - p1 > 1 and (p1 - p2 <= 1 and p2 - p3 <= 1):
                 pres_tend = 6
-            elif (p4 - p1 <= -3) or p4 > p3 > p2 > p1:
+            elif (p4 - p1 > 3 and (p2 - p1 >= 3 and p3 - p2 >= 3 and p4 - p3 >= 3)) or p4 > p3 > p2 > p1:
                 pres_tend = 7
-            elif p4 - p1 < 0 & p4 - p1 > -3:
+            elif p4 - p1 > 1 and (p2 - p1 >= 3 and p3 - p2 >= 3):
                 pres_tend = 8
 
             return pres_change, abs(int(pres_diff)), pres_tend
