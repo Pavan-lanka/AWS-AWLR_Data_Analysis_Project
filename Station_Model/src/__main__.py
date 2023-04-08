@@ -5,11 +5,6 @@ import cv2
 import pickle
 
 
-file_path = os.path.abspath('my_dicts.pkl')
-with open(file_path, 'rb') as f:
-    dictionaries = pickle.load(f)
-
-
 def main():
     abbrv_for_validation = dict()
     parameter_abbreviations = sm.get_abbreviations_from_file(dictionaries)
@@ -31,6 +26,8 @@ def main():
     time_stamp_data, time_stamp_row_index = sm.get_time_stamp_data(abbrv_for_validation, fetched_data, fetched_data_columns)
     plot_data = sm.parameter_validation(time_stamp_data, fetched_data_columns, parameter_abbreviations)
     previous_pressure_values = sm.get_previous_pressure_values(time_stamp_row_index, fetched_data_columns, abbrv_for_validation)
+    if 'pressure' in plot_data:
+        previous_pressure_values.append(plot_data['pressure'])
     pressure_values_to_plot = sm.get_pressure_values_to_plot(previous_pressure_values)
     plot_data = sm.validate_pressure_values_to_plot(pressure_values_to_plot, plot_data)
     plot_data['past_weather'] = sm.get_previous_weather_value(time_stamp_row_index, fetched_data_columns, abbrv_for_validation)
@@ -41,8 +38,12 @@ def main():
 
 
 if __name__ == '__main__':
+
+    file_path = os.path.abspath('my_dicts.pkl')
+    with open(file_path, 'rb') as f:
+        dictionaries = pickle.load(f)
     path_to_model = main()
-    cv2.waitKey(10)
+    cv2.waitKey(5)
     img = cv2.imread(path_to_model)
     cv2.imshow('Station Model', img)
     key = cv2.waitKey(0)

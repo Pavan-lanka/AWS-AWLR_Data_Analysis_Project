@@ -146,7 +146,7 @@ class StationModelPlot:
                 eval(plot_dictionary[key])
 
         name = 'Station_model.jpeg'
-        path = os.path.join(os.path.dirname('output'), name)
+        path = os.path.abspath('Station_model.jpeg')
         plt.axis('off')
         plt.savefig(path, dpi=100)
 
@@ -221,9 +221,9 @@ class StationModelPlot:
                     pressure_1hr_ago - current_pressure >= 3 and pressure_2hr_ago - pressure_1hr_ago >= 3):
                 pressure_tend = 8
 
-            return pressure_change_symbol, abs(int(pressure_diff)), pressure_tend
+            return pressure_change_symbol, abs(pressure_diff), pressure_tend
         else:
-            return pressure_change_symbol, abs(int(pressure_diff))
+            return pressure_change_symbol, abs(pressure_diff)
 
     @staticmethod
     def get_abbreviations_from_file(dictionaries):
