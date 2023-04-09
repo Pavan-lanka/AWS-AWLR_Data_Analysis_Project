@@ -141,6 +141,7 @@ class StationModelPlot:
         station_square = plt.Rectangle((-6, -6), 12, 12, fc='white', ec="k")
         # ax.set_aspect()
         ax.add_patch(station_square)
+
         for key, value in data.items():
             if key in plot_dictionary:
                 eval(plot_dictionary[key])
@@ -167,64 +168,6 @@ class StationModelPlot:
             ts = dt.strptime(time_stamp_string, '%Y-%m-%d %H:%M:%S')
             return ts
 
-    def _get_pressure_change_and_difference(p_curr, p_prev):
-
-        pressure_diff = p_curr - p_prev
-        if pressure_diff > 0:
-            return '-', pressure_diff
-        elif pressure_diff < 0:
-            return '+', pressure_diff
-        return '±', pressure_diff
-
-    @staticmethod
-    def get_pressure_values_to_plot(pressure_values: list):
-        """
-
-        :param pressure_values: A list of Pressure values since last 3 hours
-        :return: pressure_change_symbol: str, pressure_diff: int, pressure_tend: int
-        """
-        pressure_change_symbol = ''
-        pressure_diff = None
-        pressure_tend = -1
-        if len(pressure_values) == 4:
-            current_pressure = pressure_values[3]
-            pressure_1hr_ago = pressure_values[2]
-            pressure_2hr_ago = pressure_values[1]
-            pressure_3hr_ago = pressure_values[0]
-            pressure_change_symbol, pressure_diff = StationModelPlot._get_pressure_change_and_difference(
-                current_pressure, pressure_3hr_ago)
-            if current_pressure >= pressure_3hr_ago and (
-                    pressure_2hr_ago - pressure_3hr_ago >= 3 and pressure_1hr_ago - pressure_2hr_ago >= 3):
-                pressure_tend = 0
-            elif current_pressure - pressure_3hr_ago >= 1 and (
-                    current_pressure - pressure_1hr_ago < 3 and pressure_1hr_ago - pressure_2hr_ago < 3):
-                pressure_tend = 1
-            elif (current_pressure - pressure_3hr_ago > 3 and (
-                    current_pressure - pressure_1hr_ago > 3 and pressure_1hr_ago - pressure_2hr_ago > 3)) or pressure_3hr_ago < pressure_2hr_ago < pressure_1hr_ago < current_pressure:
-                pressure_tend = 2
-            elif current_pressure - pressure_3hr_ago > 1 and (
-                    current_pressure - pressure_1hr_ago >= 3 and pressure_2hr_ago - pressure_1hr_ago >= 3):
-                pressure_tend = 3
-            elif (pressure_3hr_ago == pressure_2hr_ago == pressure_1hr_ago == current_pressure) or abs(
-                    current_pressure - pressure_3hr_ago) <= 1:
-                pressure_tend = 4
-            elif current_pressure <= pressure_3hr_ago and (
-                    pressure_3hr_ago - pressure_2hr_ago >= 3 and pressure_2hr_ago - pressure_1hr_ago >= 3):
-                pressure_tend = 5
-            elif pressure_3hr_ago - current_pressure > 1 and (
-                    current_pressure - pressure_1hr_ago <= 1 and pressure_1hr_ago - pressure_2hr_ago <= 1):
-                pressure_tend = 6
-            elif (pressure_3hr_ago - current_pressure > 3 and (
-                    pressure_1hr_ago - current_pressure >= 3 and pressure_2hr_ago - pressure_1hr_ago >= 3 and pressure_3hr_ago - pressure_2hr_ago >= 3)) or pressure_3hr_ago > pressure_2hr_ago > pressure_1hr_ago > current_pressure:
-                pressure_tend = 7
-            elif pressure_3hr_ago - current_pressure > 1 and (
-                    pressure_1hr_ago - current_pressure >= 3 and pressure_2hr_ago - pressure_1hr_ago >= 3):
-                pressure_tend = 8
-
-            return pressure_change_symbol, abs(pressure_diff), pressure_tend
-        else:
-            return pressure_change_symbol, abs(pressure_diff)
-
     @staticmethod
     def get_abbreviations_from_file(dictionaries):
 
@@ -249,10 +192,68 @@ class StationModelPlot:
                     plot_dictionary = dictionary
         return plot_dictionary
 
+    def _get_pressure_change_and_difference(p_curr, p_prev):
+
+        pressure_diff = p_curr - p_prev
+        if pressure_diff > 0:
+            return '-', pressure_diff
+        elif pressure_diff < 0:
+            return '+', pressure_diff
+        return '±', pressure_diff
     @staticmethod
-    def validate_pressure_values_to_plot(previous_pressure_values: list(), plot_data: dict):
-        previous_pressure_values.append(int(plot_data['pressure']))
-        pressure_values_to_plot = StationModelPlot.get_pressure_values_to_plot(previous_pressure_values)
+    def get_previous_pressure_values(time_stamp_row_index: list, fetched_data_columns, abbreviations: dict,
+                                     fetched_data):
+        previous_pressure_values = list()
+        for iter1 in abbreviations['pressure']:
+            if iter1 in fetched_data_columns:
+                val_range = 3
+                temp_var = time_stamp_row_index[0] - val_range
+                if temp_var >= 0:
+                    previous_pressure_values = fetched_data.loc[temp_var:time_stamp_row_index[0], iter1]
+                    previous_pressure_values = previous_pressure_values.tolist()
+                    previous_pressure_values = [int(iter1) for iter1 in previous_pressure_values]
+                else:
+                    break
+        return previous_pressure_values
+
+    @staticmethod
+    def validate_pressure_values_to_plot(pressure_values: list):
+        """
+
+        :param pressure_values: A list of Pressure values since last 3 hours
+        :return: pressure_change_symbol: str, pressure_diff: int, pressure_tend: int
+        """
+        if len(pressure_values) == 4:
+            current_pressure = pressure_values[3]
+            pressure_1hr_ago = pressure_values[2]
+            pressure_2hr_ago = pressure_values[1]
+            pressure_3hr_ago = pressure_values[0]
+            pressure_change_symbol, pressure_diff = StationModelPlot._get_pressure_change_and_difference(current_pressure, pressure_3hr_ago)
+            if current_pressure >= pressure_3hr_ago and (pressure_2hr_ago - pressure_3hr_ago >= 3 and pressure_1hr_ago - pressure_2hr_ago >= 3):
+                pressure_tend = 0
+            elif current_pressure - pressure_3hr_ago >= 1 and (current_pressure - pressure_1hr_ago < 3 and pressure_1hr_ago - pressure_2hr_ago < 3):
+                pressure_tend = 1
+            elif (current_pressure - pressure_3hr_ago > 3 and (current_pressure - pressure_1hr_ago > 3 and pressure_1hr_ago - pressure_2hr_ago > 3)) or pressure_3hr_ago < pressure_2hr_ago < pressure_1hr_ago < current_pressure:
+                pressure_tend = 2
+            elif current_pressure - pressure_3hr_ago > 1 and (current_pressure - pressure_1hr_ago >= 3 and pressure_2hr_ago - pressure_1hr_ago >= 3):
+                pressure_tend = 3
+            elif (pressure_3hr_ago == pressure_2hr_ago == pressure_1hr_ago == current_pressure) or abs(current_pressure - pressure_3hr_ago) <= 1:
+                pressure_tend = 4
+            elif current_pressure <= pressure_3hr_ago and (pressure_3hr_ago - pressure_2hr_ago >= 3 and pressure_2hr_ago - pressure_1hr_ago >= 3):
+                pressure_tend = 5
+            elif pressure_3hr_ago - current_pressure > 1 and (current_pressure - pressure_1hr_ago <= 1 and pressure_1hr_ago - pressure_2hr_ago <= 1):
+                pressure_tend = 6
+            elif (pressure_3hr_ago - current_pressure > 3 and (pressure_1hr_ago - current_pressure >= 3 and pressure_2hr_ago - pressure_1hr_ago >= 3 and pressure_3hr_ago - pressure_2hr_ago >= 3)) or pressure_3hr_ago > pressure_2hr_ago > pressure_1hr_ago > current_pressure:
+                pressure_tend = 7
+            elif pressure_3hr_ago - current_pressure > 1 and (pressure_1hr_ago - current_pressure >= 3 and pressure_2hr_ago - pressure_1hr_ago >= 3):
+                pressure_tend = 8
+
+            return pressure_change_symbol, abs(pressure_diff), pressure_tend
+        else:
+            return pressure_change_symbol, abs(pressure_diff)
+
+    @staticmethod
+    def get_pressure_values_to_plot(pressure_values_to_plot, plot_data: dict):
         if len(pressure_values_to_plot) == 3:
             if pressure_values_to_plot[0] != '':
                 plot_data['pressure_change'] = pressure_values_to_plot[0]
@@ -275,11 +276,10 @@ class StationModelPlot:
             meteo_weather_code = plot_data['present_weather'] if plot_data['present_weather'] >= 0 else 0
             if meteo_weather_code in meteostat_weather_code_map:
                 plot_data['present_weather'] = meteostat_weather_code_map[meteo_weather_code]
-                plot_data['past_weather'] = meteostat_weather_code_map[weather_3hrs_ago]
-                if meteo_weather_code == 0:
-                    plot_data['present_weather'] = 0
-                    raise warnings.warn(f"The Present Weather and Past Weather "
-                                        "data is Inaccurate in Meteostat API for the current weather symbol")
+                plot_data['past_weather'] = meteostat_weather_code_map[meteo_weather_code]
+                if plot_data['present_weather'] == 0:
+                    warnings.warn(f"The Present Weather and Past Weather "
+                                  f"symbols data is inaccurate to plot from Meteostat data")
                 return plot_data
 
     @staticmethod
@@ -293,9 +293,9 @@ class StationModelPlot:
             station_id = input(obtain_method['fetch_data'])
             data_obj = StationModelPlot(station_id=station_id)
             st_time = StationModelPlot.get_time_stamp(
-                input("Enter End time in format: 'YYYY-MM-DD HH:MM:SS ex. 2022-01-10 00:00:00 --:\n"))
+                input("Enter Start time in format: 'YYYY-MM-DD HH:MM:SS ex. 2022-01-10 00:00:00 --:\n"))
             ed_time = StationModelPlot.get_time_stamp(
-                input("Enter End time in format: 'YYYY-MM-DD HH:MM:SS ex. 2022-01-20 00:00:00 --:\n"))
+                input("Enter End time in format: 'YYYY-MM-DD HH:MM:SS ex. 2022-02-20 00:00:00 --:\n"))
             freq = input("Enter observation Frequency from list [Hourly, Daily] : \t")
             fetched_data, fetched_data_columns = data_obj.fetch_station_data(start_time=st_time,
                                                                              end_time=ed_time,
@@ -328,25 +328,13 @@ class StationModelPlot:
         return time_stamp_data, time_stamp_row_index
 
     @staticmethod
-    def get_previous_pressure_values(time_stamp_row_index: list, fetched_data_columns, abbreviations: dict):
-        previous_pressure_values = list()
-        for iter1 in abbreviations['pressure']:
-            if iter1 in fetched_data_columns:
-                val_range = 3
-                while val_range > 0:
-                    if len(time_stamp_row_index) > 0 and (time_stamp_row_index[0] - val_range) >= 0:
-                        previous_pressure_values.append(int(fetched_data[iter1][time_stamp_row_index[0] - val_range]))
-                        val_range -= 1
-            else:
-                break
-        return previous_pressure_values
-
-    @staticmethod
-    def get_previous_weather_value(time_stamp_row_index: list, fetched_data_columns, abbreviations: dict):
+    def get_previous_weather_value(time_stamp_row_index: list, fetched_data_columns, abbreviations: dict, fetched_data,plot_data):
         for iter1 in abbreviations['present_weather']:
             if iter1 in fetched_data_columns:
                 if len(time_stamp_row_index) > 0 and (time_stamp_row_index[0] - 3) >= 0:
-                    previous_weather = fetched_data[iter1][idx[0] - 3]
+                    previous_weather = fetched_data[iter1][time_stamp_row_index[0] - 3]
+                    plot_data['past_weather'] = previous_weather
                 else:
                     previous_weather = 0
-        return previous_weather
+                    plot_data['past_weather'] = previous_weather
+        return plot_data
