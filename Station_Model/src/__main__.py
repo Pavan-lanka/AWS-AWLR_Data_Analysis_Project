@@ -7,9 +7,9 @@ import pickle
 
 def main():
     valid_params = dict()
-    param_abbrvs = sm.get_abbreviations_from_file(dictionaries)
-    plt_data = sm.get_plotting_dictionary(dictionaries)
-    meteo_weather_codes = sm.get_meteo_codes_from_file(dictionaries)
+    param_abbrvs = sm.get_abbreviations_from_file(archived_data)
+    plt_data = sm.get_plotting_dictionary(archived_data)
+    meteo_weather_codes = sm.get_meteo_codes_from_file(archived_data)
     valid_params['date_time'] = param_abbrvs['date_time']
     valid_params['pressure'] = param_abbrvs['pressure']
     valid_params['present_weather'] = param_abbrvs['present_weather']
@@ -28,12 +28,11 @@ def main():
     print(plot_data)
     past_pres_vals = sm.get_previous_pressure_values(row_index, fetched_data_cols, valid_params, fetched_data)
     print(past_pres_vals)
-    pres_vals_toplot = sm.validate_pressure_values_to_plot(past_pres_vals)
-    print(pres_vals_toplot)
-    plot_data = sm.get_pressure_values_to_plot(pres_vals_toplot, plot_data)
+    pres_vals_to_plot = sm.validate_pressure_values_to_plot(past_pres_vals)
+    plot_data = sm.get_pressure_values_to_plot(pres_vals_to_plot, plot_data)
     plot_data = sm.get_previous_weather_value(row_index, fetched_data_cols, valid_params, fetched_data, plot_data)
     if data_src_inp == 'f':
-        plot_data = sm.meteostat_weather_codes_conversion(plot_data, station_id, data_src_inp, meteo_weather_codes)
+        plot_data = sm.meteostat_weather_codes_conversion(plot_data, station_id, meteo_weather_codes)
     path = sm.plot_station_model(plot_data, plt_data)
     return path
 
@@ -42,7 +41,7 @@ if __name__ == '__main__':
 
     file_path = os.path.abspath('my_dicts.pkl')
     with open(file_path, 'rb') as f:
-        dictionaries = pickle.load(f)
+        archived_data = pickle.load(f)
     path_to_model = main()
     cv2.waitKey(5)
     img = cv2.imread(path_to_model)

@@ -1,10 +1,12 @@
 import warnings
-from metpy.plots import *
+from metpy import io
+from metpy.plots import StationPlot
+from metpy.plots.wx_symbols import current_weather
+from metpy.plots.wx_symbols import sky_cover, pressure_tendency
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from metpy.io import *
 import pandas as pd
 import meteostat as mt
 from datetime import datetime as dt
@@ -58,13 +60,11 @@ class StationModelPlot:
         supported_types = ['nc', 'xml', 'txt', 'csv']
         extension_read = {'nc': xr.open_dataset,
                           'xml': pd.read_xml,
-                          'txt': parse_metar_file,
+                          'txt': io.parse_metar_file,
                           'csv': pd.read_csv
                           }
         extension = self.path_to_file[self.path_to_file.rfind('.'):][1:]
         if extension not in supported_types:
-            print(extension)
-            print('txt' in supported_types)
             raise RuntimeError(f'Supported file formats are {supported_types}')
         elif extension == 'nc':
             weather_data = extension_read['nc'](self.path_to_file, engine="netcdf4")
@@ -113,15 +113,6 @@ class StationModelPlot:
                 elif iteration not in parameters_values:
                     not_available_parameters.append(iteration)
         print(f"Parameters {not_available_parameters} cannot be plotted in the Station model")
-        # if len(not_available_parameters) > 0:
-        #     user_parameter = input(f"parameter abbreviations {not_available_parameters} "
-        #                            f"are not recognized to plot data, Please select the "
-        #                            f"parameter from {parameter_keys} to add an abbreviation:\t")
-        #     if user_parameter in parameter_keys:
-        #         user_added_abbreviation = input('Enter abbreviation for the selected parameter:\t')
-        #         parameter_abbreviations[user_parameter].append(user_added_abbreviation)
-        #     else:
-        #         print(f"Parameters {not_available_parameters} cannot be plotted in the Station model")
         return data_to_plot
 
     @staticmethod
@@ -136,8 +127,8 @@ class StationModelPlot:
         sp = StationPlot(ax, 0, 0, fontsize=18, spacing=25)
         ax.set_xlim(-8, 8)
         ax.set_ylim(-8, 8)
-        ax.set_title('Station Model', fontsize=22, bbox=dict(boxstyle='square', facecolor='white', alpha=0.3)
-                     , weight='heavy', family='monospace')
+        ax.set_title('Station Model', fontsize=22, bbox=dict(boxstyle='square', facecolor='white', alpha=0.3),
+                     weight='heavy', family='monospace')
         station_square = plt.Rectangle((-6, -6), 12, 12, fc='white', ec="k")
         # ax.set_aspect()
         ax.add_patch(station_square)
@@ -147,7 +138,7 @@ class StationModelPlot:
                 eval(plot_dictionary[key])
 
         name = 'Station_model.jpeg'
-        path = os.path.abspath('Station_model.jpeg')
+        path = os.path.abspath(name)
         plt.axis('off')
         plt.savefig(path, dpi=100)
 
@@ -169,37 +160,43 @@ class StationModelPlot:
             return ts
 
     @staticmethod
-    def get_abbreviations_from_file(dictionaries):
+    def get_abbreviations_from_file(data: dict):
 
-        for dictionary in dictionaries:
-            if 'station_id' in dictionary:
-                if isinstance(dictionary['station_id'], list):
-                    parameter_abbreviations = dictionary
+        for iter1 in data:
+            if 'station_id' in iter1:
+                if isinstance(iter1['station_id'], list):
+                    parameter_abbreviations = iter1
         return parameter_abbreviations
 
     @staticmethod
-    def get_meteo_codes_from_file(dictionaries):
-        for dictionary in dictionaries:
-            if 1 in dictionary:
-                meteostat_weather_codes = dictionary
+    def get_meteo_codes_from_file(data):
+        for iter1 in data:
+            if 1 in iter1:
+                meteostat_weather_codes = iter1
         return meteostat_weather_codes
 
     @staticmethod
-    def get_plotting_dictionary(dictionaries):
-        for dictionary in dictionaries:
-            if 'station_id' in dictionary:
-                if isinstance(dictionary['station_id'], str):
-                    plot_dictionary = dictionary
+    def get_plotting_dictionary(data):
+        for iter1 in data:
+            if 'station_id' in iter1:
+                if isinstance(iter1['station_id'], str):
+                    plot_dictionary = iter1
         return plot_dictionary
 
-    def _get_pressure_change_and_difference(p_curr, p_prev):
+    @staticmethod
+    def _get_pressure_change(p_curr, p_prev):
 
-        pressure_diff = p_curr - p_prev
-        if pressure_diff > 0:
-            return '-', pressure_diff
-        elif pressure_diff < 0:
-            return '+', pressure_diff
-        return '±', pressure_diff
+        p_diff = p_curr - p_prev
+        if p_diff > 0:
+            return '-'
+        elif p_diff < 0:
+            return '+'
+        return '±'
+
+    @staticmethod
+    def get_pressure_difference(p_curr, p_prev):
+        p_diff = p_curr - p_prev
+        return p_diff
     @staticmethod
     def get_previous_pressure_values(time_stamp_row_index: list, fetched_data_columns, abbreviations: dict,
                                      fetched_data):
@@ -228,59 +225,67 @@ class StationModelPlot:
             pressure_1hr_ago = pressure_values[2]
             pressure_2hr_ago = pressure_values[1]
             pressure_3hr_ago = pressure_values[0]
-            pressure_change_symbol, pressure_diff = StationModelPlot._get_pressure_change_and_difference(current_pressure, pressure_3hr_ago)
-            if current_pressure >= pressure_3hr_ago and (pressure_2hr_ago - pressure_3hr_ago >= 3 and pressure_1hr_ago - pressure_2hr_ago >= 3):
+            pressure_change_symbol = StationModelPlot._get_pressure_change(
+                current_pressure, pressure_3hr_ago)
+            pressure_diff = StationModelPlot.get_pressure_difference(
+                current_pressure, pressure_3hr_ago)
+            if current_pressure >= pressure_3hr_ago and (
+                    pressure_2hr_ago - pressure_3hr_ago >= 3 and pressure_1hr_ago - pressure_2hr_ago >= 3):
                 pressure_tend = 0
-            elif current_pressure - pressure_3hr_ago >= 1 and (current_pressure - pressure_1hr_ago < 3 and pressure_1hr_ago - pressure_2hr_ago < 3):
+            elif current_pressure - pressure_3hr_ago >= 1 and (
+                    current_pressure - pressure_1hr_ago < 3 and pressure_1hr_ago - pressure_2hr_ago < 3):
                 pressure_tend = 1
-            elif (current_pressure - pressure_3hr_ago > 3 and (current_pressure - pressure_1hr_ago > 3 and pressure_1hr_ago - pressure_2hr_ago > 3)) or pressure_3hr_ago < pressure_2hr_ago < pressure_1hr_ago < current_pressure:
+            elif (current_pressure - pressure_3hr_ago > 3 and (
+                    current_pressure - pressure_1hr_ago > 3 and pressure_1hr_ago - pressure_2hr_ago > 3)) or pressure_3hr_ago < pressure_2hr_ago < pressure_1hr_ago < current_pressure:
                 pressure_tend = 2
-            elif current_pressure - pressure_3hr_ago > 1 and (current_pressure - pressure_1hr_ago >= 3 and pressure_2hr_ago - pressure_1hr_ago >= 3):
+            elif current_pressure - pressure_3hr_ago > 1 and (
+                    current_pressure - pressure_1hr_ago >= 3 and pressure_2hr_ago - pressure_1hr_ago >= 3):
                 pressure_tend = 3
-            elif (pressure_3hr_ago == pressure_2hr_ago == pressure_1hr_ago == current_pressure) or abs(current_pressure - pressure_3hr_ago) <= 1:
+            elif (pressure_3hr_ago == pressure_2hr_ago == pressure_1hr_ago == current_pressure) or abs(
+                    current_pressure - pressure_3hr_ago) <= 1:
                 pressure_tend = 4
-            elif current_pressure <= pressure_3hr_ago and (pressure_3hr_ago - pressure_2hr_ago >= 3 and pressure_2hr_ago - pressure_1hr_ago >= 3):
+            elif current_pressure <= pressure_3hr_ago and (
+                    pressure_3hr_ago - pressure_2hr_ago >= 3 and pressure_2hr_ago - pressure_1hr_ago >= 3):
                 pressure_tend = 5
-            elif pressure_3hr_ago - current_pressure > 1 and (current_pressure - pressure_1hr_ago <= 1 and pressure_1hr_ago - pressure_2hr_ago <= 1):
+            elif pressure_3hr_ago - current_pressure > 1 and (
+                    current_pressure - pressure_1hr_ago <= 1 and pressure_1hr_ago - pressure_2hr_ago <= 1):
                 pressure_tend = 6
-            elif (pressure_3hr_ago - current_pressure > 3 and (pressure_1hr_ago - current_pressure >= 3 and pressure_2hr_ago - pressure_1hr_ago >= 3 and pressure_3hr_ago - pressure_2hr_ago >= 3)) or pressure_3hr_ago > pressure_2hr_ago > pressure_1hr_ago > current_pressure:
+            elif (pressure_3hr_ago - current_pressure > 3 and (
+                    pressure_1hr_ago - current_pressure >= 3 and pressure_2hr_ago - pressure_1hr_ago >= 3 and pressure_3hr_ago - pressure_2hr_ago >= 3)) or pressure_3hr_ago > pressure_2hr_ago > pressure_1hr_ago > current_pressure:
                 pressure_tend = 7
-            elif pressure_3hr_ago - current_pressure > 1 and (pressure_1hr_ago - current_pressure >= 3 and pressure_2hr_ago - pressure_1hr_ago >= 3):
+            elif pressure_3hr_ago - current_pressure > 1 and (
+                    pressure_1hr_ago - current_pressure >= 3 and pressure_2hr_ago - pressure_1hr_ago >= 3):
                 pressure_tend = 8
 
             return pressure_change_symbol, abs(pressure_diff), pressure_tend
         else:
-            return pressure_change_symbol, abs(pressure_diff)
+            return '', None
 
     @staticmethod
     def get_pressure_values_to_plot(pressure_values_to_plot, plot_data: dict):
         if len(pressure_values_to_plot) == 3:
             if pressure_values_to_plot[0] != '':
                 plot_data['pressure_change'] = pressure_values_to_plot[0]
-            if pressure_values_to_plot[1] != None:
+            if pressure_values_to_plot[1] is not None:
                 plot_data['pressure_difference'] = pressure_values_to_plot[1]
             if pressure_values_to_plot[2] >= 0:
                 plot_data['pressure_tendency'] = pressure_values_to_plot[2]
-                print(plot_data['pressure_tendency'])
         elif len(pressure_values_to_plot) == 2:
-            if pressure_values_to_plot[0] != '':
-                plot_data['pressure_change'] = pressure_values_to_plot[0]
-            if pressure_values_to_plot[1] != None:
-                plot_data['pressure_difference'] = pressure_values_to_plot[1]
+            plot_data['pressure_change'] = pressure_values_to_plot[0]
+            plot_data['pressure_difference'] = pressure_values_to_plot[1]
         return plot_data
 
     @staticmethod
-    def meteostat_weather_codes_conversion(plot_data: dict, st_id: str, data_source_input, meteostat_weather_code_map):
-        if data_source_input == 'f':
-            plot_data['station_id'] = st_id
-            meteo_weather_code = plot_data['present_weather'] if plot_data['present_weather'] >= 0 else 0
-            if meteo_weather_code in meteostat_weather_code_map:
-                plot_data['present_weather'] = meteostat_weather_code_map[meteo_weather_code]
-                plot_data['past_weather'] = meteostat_weather_code_map[meteo_weather_code]
-                if plot_data['present_weather'] == 0:
-                    warnings.warn(f"The Present Weather and Past Weather "
-                                  f"symbols data is inaccurate to plot from Meteostat data")
-                return plot_data
+    def meteostat_weather_codes_conversion(plot_data: dict, st_id: str, meteostat_weather_code_map):
+        plot_data['station_id'] = st_id
+        meteo_weather_code = plot_data['present_weather'] if plot_data['present_weather'] >= 0 else 0
+        if meteo_weather_code in meteostat_weather_code_map:
+            plot_data['present_weather'] = meteostat_weather_code_map[meteo_weather_code]
+            plot_data['past_weather'] = meteostat_weather_code_map[meteo_weather_code]
+            if plot_data['present_weather'] == 0 or plot_data['past_weather'] == 0:
+                warnings.warn(f"The Present Weather and Past Weather "
+                              f"symbols data is inaccurate to plot from Meteostat data")
+            return plot_data
 
     @staticmethod
     def get_input_for_data_source():
@@ -328,7 +333,8 @@ class StationModelPlot:
         return time_stamp_data, time_stamp_row_index
 
     @staticmethod
-    def get_previous_weather_value(time_stamp_row_index: list, fetched_data_columns, abbreviations: dict, fetched_data,plot_data):
+    def get_previous_weather_value(time_stamp_row_index: list, fetched_data_columns, abbreviations: dict, fetched_data,
+                                   plot_data):
         for iter1 in abbreviations['present_weather']:
             if iter1 in fetched_data_columns:
                 if len(time_stamp_row_index) > 0 and (time_stamp_row_index[0] - 3) >= 0:
