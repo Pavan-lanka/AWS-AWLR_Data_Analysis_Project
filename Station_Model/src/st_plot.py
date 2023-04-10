@@ -27,17 +27,17 @@ class StationModelPlot:
     StationModelPlot Class accepts 
     Station_ID as String. ex:'12992' & 
     path_to_file as Path to file or file as object 
-    ex. "/PycharmProjects/AWS-AWLR_Data_Analysis_Project/Station_Model/data/test/example_metar.txt"
-    
+                ex. "/PycharmProjects/AWS-AWLR_Data_Analysis_Project/Station_Model/data/test/example_metar.txt"
     '''
 
     def fetch_station_data(self, start_time, end_time, obs_frequency='hourly'):
         """
+        Args:
+            start_time(str): Start time to fetch data Ex: 2023-05-29 07:51:00
+            end_time(str): End time to fetch data Ex: 2023-03-29 07:51:00
+            obs_frequency(str): observation Frequency of data Ex. (Hourly, Daily)
 
-        :param start_time: Start time to fetch data Ex: 2023-05-29 07:51:00
-        :param end_time: End time to fetch data Ex: 2023-03-29 07:51:00
-        :param obs_frequency: observation Frequency of data Ex. (Hourly, Daily)
-        :return: Tuple of (DataFrame, List)
+        Returns:Tuple of (DataFrame, List)
                  containing DataFrame of weather data and columns values of the data as list
         """
         frequency = ['hourly', 'daily']
@@ -57,7 +57,7 @@ class StationModelPlot:
     def custom_file_read(self):
         """
 
-        :return: Tuple of (DataFrame, List)
+        Returns:Tuple of (DataFrame, List)
                  containing DataFrame of weather data and columns values of the data as list
         """
         supported_types = ['nc', 'xml', 'txt', 'csv']
@@ -90,11 +90,18 @@ class StationModelPlot:
     @staticmethod
     def parameter_validation(time_stamp_data: dict, data_columns: list, parameter_abbreviations: dict):
         """
+                :param parameter_abbreviations:
+        :param time_stamp_data:
+        :param data_columns:
+        :return:
+        Args:
+            time_stamp_data(dict()): A dictionary of weather parameters, values for weather data
+            data_columns(list()): A list of Weather Parameter Abbreviations
+            parameter_abbreviations(dict()): A dictionary containing parameter abbreviations
 
-        :param parameter_abbreviations: A dictionary containing parameter abbreviations
-        :param time_stamp_data: A dictionary of all Parameters from weather data, weather data values
-        :param data_columns: A list of Weather Parameter Abbreviations
-        :return: Dictionary of valid Parameter names, values to plot
+        Returns(dict()):
+                        Dictionary of valid Parameter names, values to plot
+
         """
         data_to_plot = dict()
         parameter_keys = list(parameter_abbreviations.keys())
@@ -121,10 +128,13 @@ class StationModelPlot:
     @staticmethod
     def plot_station_model(data: dict, plot_dictionary: dict):
         """
+        Args:
+            data(dict): A dictionary containing data to plot into Station Model
+            plot_dictionary(dict): A dictionary containing Plotting parameters and their respective polt functions
 
-        :param plot_dictionary: A dictionary containing Plotting parameters and their respective polt functions
-        :param data: A dictionary containing data to plot into Station Model
-        :return: Path to Image containing Station Model
+        Returns(dict):
+                Path to Image containing Station Model
+
         """
         fig, ax = plt.subplots(figsize=(10, 10))
         sp = StationPlot(ax, 0, 0, fontsize=18, spacing=25)
@@ -137,8 +147,9 @@ class StationModelPlot:
         ax.add_patch(station_square)
         logo_2 = "April_logo.png"
         logo_1 = "Azista_logo.png"
-        path1 = os.path.abspath(logo_1)
-        path2 = os.path.abspath(logo_2)
+        cwd = os.getcwd()
+        path1 = cwd + "/data/" + logo_1
+        path2 = cwd + "/data/" + logo_2
         az_logo = plt.imread(path1)
         ap_logo = plt.imread(path2)
         extent1 = [-8, -5.5, 6.5, 8]
@@ -161,11 +172,13 @@ class StationModelPlot:
     @staticmethod
     def get_time_stamp(time_stamp_string):
         """
+        Args:
+            time_stamp_string(str): accepts String in the format --> 'YYYY-MM-DD HH:MM'
 
-        :param time_stamp_string: accepts String in the format --> 'YYYY-MM-DD HH:MM'
-        :return: time_stamp object
+        Returns(object):
+                        object with time_stamp value
+
         """
-        """get_time_stamp method  """
         if len(time_stamp_string) == 16:
             ts = dt.strptime(time_stamp_string, '%Y-%m-%d %H:%M')
             return ts
@@ -178,9 +191,10 @@ class StationModelPlot:
         """
 
         Args:
-            data: Archived Nested Dictionary containing Multiple dictionaries used in the program
+            data(dict): Nested Dictionary containing Multiple dictionaries
 
-        Returns: A single Dictionary
+        Returns(dict):
+                A Dictionary of Abbreviations used to validate parameters
 
         """
         for iter1 in data:
@@ -194,9 +208,10 @@ class StationModelPlot:
         """
 
         Args:
-            data: Archived Nested Dictionary containing Multiple dictionaries used in the program
+            data(dict): Nested Dictionary containing Multiple dictionaries
 
-        Returns: A single Dictionary
+        Returns(dict):
+                A Dictionary of Integers as keys and values used to validate weather codes
 
         """
         for iter1 in data:
@@ -207,11 +222,11 @@ class StationModelPlot:
     @staticmethod
     def get_plotting_dictionary(data):
         """
-
         Args:
-            data: Archived Nested Dictionary containing Multiple dictionaries used in the program
+            data(dict): Nested Dictionary containing Multiple dictionaries
 
-        Returns: A single Dictionary
+        Returns(dict):
+                A Dictionary of weather parameters as keys and their respective plotting function
 
         """
         for iter1 in data:
@@ -225,10 +240,11 @@ class StationModelPlot:
         """
 
         Args:
-            p_curr: Current Pressure Value : integer
-            p_prev: Previous Pressure Value : integer
+            p_curr(integer): Current Pressure Value
+            p_prev(integer): Previous Pressure Value
 
-        Returns:
+        Returns(str):
+                    A string containing a special Character to plot Pressure Change
 
         """
         p_diff = p_curr - p_prev
@@ -243,11 +259,11 @@ class StationModelPlot:
         """
 
         Args:
-            p_curr: Current Pressure Value : integer
-            p_prev: Previous Pressure Value : integer
+            p_curr(integer): Current Pressure Value
+            p_prev(integer): Previous Pressure Value
 
-        Returns:
-
+        Returns(integer):
+                        An Integer of pressure difference
         """
         p_diff = p_curr - p_prev
         return p_diff
@@ -258,12 +274,13 @@ class StationModelPlot:
         """
 
         Args:
-            time_stamp_row_index: A list containing Index value of Time Stamp
-            fetched_data_columns: A list Containing Column Values of the DataFrame
-            abbreviations: A Dictionary containing Key to validate Abbreviation
-            fetched_data: A DataFrame containing Weather Values
+            time_stamp_row_index(list): A list containing Index value of Time Stamp
+            fetched_data_columns(list): A list Containing Column Values of the DataFrame
+            abbreviations(list): A Dictionary containing Key to validate Abbreviation
+            fetched_data(DataFrame): A DataFrame containing Weather Values
 
-        Returns: A list containing Pressure Values
+        Returns(list):
+                A list containing Previous Pressure Values
 
         """
         previous_pressure_values = list()
@@ -282,9 +299,12 @@ class StationModelPlot:
     @staticmethod
     def validate_pressure_values_to_plot(pressure_values: list):
         """
+        Args:
+            pressure_values(list): A list containing Previous Pressure Values
 
-        :param pressure_values: A list of Pressure values since last 3 hours
-        :return: pressure_change_symbol: str, pressure_diff: str, pressure_tend: int
+        Returns(tuple):
+                        A tuple containing validated Pressure values(pressure_change_symbol, pressure_diff, pressure_tendency)
+
         """
         if len(pressure_values) == 4:
             current_pressure = pressure_values[3]
@@ -332,11 +352,12 @@ class StationModelPlot:
         """
 
         Args:
-            pressure_values_to_plot: A list containing Previous Pressure Values
-            plot_data: A Dictionary of validated Weather Parameters and their respective Values
+            pressure_values_to_plot(Tuple): A tuple containing Validated Pressure Values to plot
+            plot_data(dict): A Dictionary of validated Weather Parameters and their respective Values
 
-        Returns: An Updated Dictionary to plot data with Pressure Parameters, namely(Pressure_Change, Pressure Difference, Pressure_tendency)
-         and their Values
+        Returns(dict):
+                    An Updated Dictionary to plot data with Pressure Parameters, namely(Pressure_Change, Pressure Difference, Pressure_tendency)
+                    and their Values
 
         """
         if len(pressure_values_to_plot) == 3:
@@ -355,11 +376,12 @@ class StationModelPlot:
     def meteostat_weather_codes_conversion(station_id, plot_data: dict, meteostat_weather_code_map):
         """
         Args:
-            station_id: A string of Station_id
-            plot_data: A Dictionary of validated Weather Parameters and their respective Values
-            meteostat_weather_code_map: A Dictionary Containing Weather Code Conversion Map for Meteostat Weather codes
+            station_id(str): A string of Station_id
+            plot_data(dict): A Dictionary of validated Weather Parameters and their respective Values
+            meteostat_weather_code_map(dict): A Dictionary Containing Weather Code Conversion Map for Meteostat Weather codes
 
-        Returns: An Updated Dictionary to plot data with Pressure Parameters, namely(Pressure_Change, Pressure Difference, Pressure_tendency)
+        Returns(dict):
+                    An Updated Dictionary to plot data with Pressure Parameters, namely(Pressure_Change, Pressure Difference, Pressure_tendency)
          and their Values
 
         """
@@ -377,7 +399,8 @@ class StationModelPlot:
     def get_input_for_data_source():
         """
 
-        Returns: A Data Frame of Weather Data, A list of Columns of the DataFrame, The User Selected Method for Data source,
+        Returns(tuple):
+                A Data Frame of Weather Data, A list of Columns of the DataFrame, The User Selected Method for Data source,
                 Station_ID as a String
 
         """
@@ -411,11 +434,12 @@ class StationModelPlot:
         """
 
         Args:
-            abbreviations: A Dictionary containing Key to validate Abbreviation
-            fetched_data: A DataFrame containing Weather Values
-            fetched_data_columns: A list Containing Column Values of the DataFrame
+            abbreviations(dict): A Dictionary containing Key to validate Abbreviation
+            fetched_data(DataFrame): A DataFrame containing Weather Values
+            fetched_data_columns(list): A list Containing Column Values of the DataFrame
 
-        Returns: A Dictionary of Key, Value a pair of Parameter and their values and a list of Index Value
+        Returns(tuple):
+                A tuple containing Dictionary of plotting data and a list of Index Value
 
         """
         for iter1 in abbreviations['date_time']:
@@ -439,14 +463,15 @@ class StationModelPlot:
                                    plot_data):
         """
         Args:
-            time_stamp_row_index: A list containing Index value of Time Stamp
-            fetched_data_columns: A list Containing Column Values of the DataFrame
-            abbreviations: A Dictionary containing Key to validate Abbreviation
-            fetched_data: A DataFrame containing Weather Values
-            plot_data: A Dictionary of validated Weather Parameters and their respective Values
+            time_stamp_row_index(list): A list containing Index value of Time Stamp
+            fetched_data_columns(list): A list Containing Column Values of the DataFrame
+            abbreviations(dict): A Dictionary containing Key to validate Abbreviation
+            fetched_data(DataFrame): A DataFrame containing Weather Values
+            plot_data(dict): A Dictionary of validated Weather Parameters and their respective Values
 
-        Returns: An Updated Dictionary to plot data with Pressure Parameters, namely(Pressure_Change, Pressure Difference, Pressure_tendency)
-         and their Values
+        Returns(dict):
+                An Updated Dictionary of plot data with Pressure Parameters, namely(Pressure_Change, Pressure Difference, Pressure_tendency)
+                and their Values
 
         """
         for iter1 in abbreviations['present_weather']:
@@ -461,6 +486,15 @@ class StationModelPlot:
 
     @staticmethod
     def get_station_names(station_id):
+        """
+
+        Args(str):
+            station_id: A string of Station Id
+
+        Returns(str):
+                    A String with updated Station ID
+
+        """
         cwd = os.getcwd()
         file_path = '/data/test/station_ids.ods'
         df = read_ods(cwd+file_path, 1, columns=["Region", "station_name", "st_identifier"])
@@ -471,3 +505,5 @@ class StationModelPlot:
                     st_name = st_name.tolist()
                     station_id = str(station_id + '[' + str(st_name[0]) + ']')
                     return station_id
+        else:
+            return station_id
