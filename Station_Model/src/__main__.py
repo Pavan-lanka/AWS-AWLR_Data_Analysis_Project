@@ -39,10 +39,10 @@ def main():
     plot_data = sm.get_previous_weather_value(row_index, fetched_data_cols, valid_params, fetched_data, plot_data)
     if data_src_inp == 'f':
         plot_data = sm.meteostat_weather_codes_conversion(station_id, plot_data, meteo_weather_codes)
-    else:
+    elif 'station_id' in plot_data:
         station_id = plot_data['station_id']
-    plot_data['station_id'] = sm.get_station_names(station_id)
-    print(plot_data['station_id'])
+        plot_data['station_id'] = sm.get_station_names(station_id)
+        print(plot_data['station_id'])
     path = sm.plot_station_model(plot_data, plt_data)
     return path
 

@@ -386,13 +386,16 @@ class StationModelPlot:
 
         """
         plot_data['station_id'] = station_id
-        meteo_weather_code = plot_data['present_weather'] if plot_data['present_weather'] >= 0 else 0
-        if meteo_weather_code in meteostat_weather_code_map:
-            plot_data['present_weather'] = meteostat_weather_code_map[meteo_weather_code]
-            plot_data['past_weather'] = meteostat_weather_code_map[meteo_weather_code]
-            if plot_data['present_weather'] == 0 or plot_data['past_weather'] == 0:
-                warnings.warn(f"The Present Weather and Past Weather "
-                              f"symbols data is inaccurate to plot from Meteostat data")
+        if 'present_weather' in plot_data:
+            meteo_weather_code = plot_data['present_weather'] if plot_data['present_weather'] >= 0 else 0
+            if meteo_weather_code in meteostat_weather_code_map:
+                plot_data['present_weather'] = meteostat_weather_code_map[meteo_weather_code]
+                plot_data['past_weather'] = meteostat_weather_code_map[meteo_weather_code]
+                if plot_data['present_weather'] == 0 or plot_data['past_weather'] == 0:
+                    warnings.warn(f"The Present Weather and Past Weather "
+                                  f"symbols data is inaccurate to plot from Meteostat data")
+                    return plot_data
+        else:
             return plot_data
 
     @staticmethod
@@ -489,7 +492,7 @@ class StationModelPlot:
         """
 
         Args(str):
-            station_id: A string of Station Id
+            station_id: A string of Station ID
 
         Returns(str):
                     A String with updated Station ID
