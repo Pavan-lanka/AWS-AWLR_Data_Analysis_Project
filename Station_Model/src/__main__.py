@@ -7,7 +7,7 @@ import pickle
 
 def main():
     valid_params = dict()
-    param_abbrvs = sm.get_abbreviations_from_file(archived_data)
+    param_abbrvs = sm.get_abbreviations(archived_data)
     plt_data = sm.get_plotting_dictionary(archived_data)
     meteo_weather_codes = sm.get_meteo_codes_from_file(archived_data)
     valid_params['date_time'] = param_abbrvs['date_time']
@@ -38,14 +38,19 @@ def main():
     plot_data = sm.get_pressure_values_to_plot(pres_vals_to_plot, plot_data)
     plot_data = sm.get_previous_weather_value(row_index, fetched_data_cols, valid_params, fetched_data, plot_data)
     if data_src_inp == 'f':
-        plot_data = sm.meteostat_weather_codes_conversion(plot_data, station_id, meteo_weather_codes)
+        plot_data = sm.meteostat_weather_codes_conversion(station_id, plot_data, meteo_weather_codes)
+    else:
+        station_id = plot_data['station_id']
+    plot_data['station_id'] = sm.get_station_names(station_id)
+    print(plot_data['station_id'])
+    print(plt_data)
     path = sm.plot_station_model(plot_data, plt_data)
     return path
 
 
 if __name__ == '__main__':
 
-    file_path = os.path.abspath('my_dicts.pkl')
+    file_path = '/home/hp/PycharmProjects/AWS-AWLR_Data_Analysis_Project/Station_Model/data/my_dicts.pkl'
     with open(file_path, 'rb') as f:
         archived_data = pickle.load(f)
     path_to_model = main()

@@ -15,6 +15,7 @@ import metpy
 import cv2
 import os
 import pickle
+from pandas_ods_reader import read_ods
 
 
 @dataclass
@@ -172,7 +173,7 @@ class StationModelPlot:
             return ts
 
     @staticmethod
-    def get_abbreviations_from_file(data: dict):
+    def get_abbreviations(data: dict):
         """
 
         Args:
@@ -249,6 +250,7 @@ class StationModelPlot:
         """
         p_diff = p_curr - p_prev
         return p_diff
+
     @staticmethod
     def get_previous_pressure_values(time_stamp_row_index: list, fetched_data_columns, abbreviations: dict,
                                      fetched_data):
@@ -349,19 +351,18 @@ class StationModelPlot:
         return plot_data
 
     @staticmethod
-    def meteostat_weather_codes_conversion(plot_data: dict, st_id: str, meteostat_weather_code_map):
+    def meteostat_weather_codes_conversion(station_id, plot_data: dict, meteostat_weather_code_map):
         """
-
         Args:
+            station_id: A string of Station_id
             plot_data: A Dictionary of validated Weather Parameters and their respective Values
-            st_id: Station_ID of the Fetched Data
             meteostat_weather_code_map: A Dictionary Containing Weather Code Conversion Map for Meteostat Weather codes
 
         Returns: An Updated Dictionary to plot data with Pressure Parameters, namely(Pressure_Change, Pressure Difference, Pressure_tendency)
          and their Values
 
         """
-        plot_data['station_id'] = st_id
+        plot_data['station_id'] = station_id
         meteo_weather_code = plot_data['present_weather'] if plot_data['present_weather'] >= 0 else 0
         if meteo_weather_code in meteostat_weather_code_map:
             plot_data['present_weather'] = meteostat_weather_code_map[meteo_weather_code]
@@ -391,7 +392,7 @@ class StationModelPlot:
                 input("Enter Start time in format: 'YYYY-MM-DD HH:MM:SS ex. 2022-01-10 00:00:00 --:\n"))
             ed_time = StationModelPlot.get_time_stamp(
                 input("Enter End time in format: 'YYYY-MM-DD HH:MM:SS ex. 2022-02-20 00:00:00 --:\n"))
-            freq = input("Enter observation Frequency from list [Hourly, Daily] : \t")
+            freq = input("Enter observation Frequency from list [hourly, daily] : \t")
             fetched_data, fetched_data_columns = data_obj.fetch_station_data(start_time=st_time,
                                                                              end_time=ed_time,
                                                                              obs_frequency=freq)
@@ -402,7 +403,7 @@ class StationModelPlot:
             data_obj = StationModelPlot(path_to_file=pt_to_file)
             fetched_data, fetched_data_columns = data_obj.custom_file_read()
             fetched_data = fetched_data.fillna('')
-        return fetched_data, fetched_data_columns, data_source_input
+            return fetched_data, fetched_data_columns, data_source_input
 
     @staticmethod
     def get_time_stamp_data(abbreviations: dict, fetched_data, fetched_data_columns: list):
@@ -456,3 +457,15 @@ class StationModelPlot:
                     previous_weather = 0
                     plot_data['past_weather'] = previous_weather
         return plot_data
+
+    @staticmethod
+    def get_station_names(station_id):
+        file_path = '/home/hp/PycharmProjects/AWS-AWLR_Data_Analysis_Project/Station_Model/data/test/station_ids.ods'
+        df = read_ods(file_path, 1, columns=["Region", "station_name", "st_identifier"])
+        if len(station_id) > 0:
+            for val in df['st_identifier']:
+                if val == station_id:
+                    st_name = df.loc[df['st_identifier'] == val]['station_name']
+                    st_name = st_name.tolist()
+                    station_id = str(station_id + '[' + str(st_name[0]) + ']')
+                    return station_id
