@@ -25,7 +25,8 @@ class StationModelPlot:
     '''
     StationModelPlot Class accepts 
     Station_ID as String. ex:'12992' & 
-    path_to_file as Path to file or file as object
+    path_to_file as Path to file or file as object 
+    ex. "/PycharmProjects/AWS-AWLR_Data_Analysis_Project/Station_Model/data/test/example_metar.txt"
     
     '''
 
@@ -35,8 +36,8 @@ class StationModelPlot:
         :param start_time: Start time to fetch data Ex: 2023-05-29 07:51:00
         :param end_time: End time to fetch data Ex: 2023-03-29 07:51:00
         :param obs_frequency: observation Frequency of data Ex. (Hourly, Daily)
-        :return: Tuple of (CSV file, List)
-                 containing CSV Data File of weather data and columns values of the data
+        :return: Tuple of (DataFrame, List)
+                 containing DataFrame of weather data and columns values of the data as list
         """
         frequency = ['hourly', 'daily']
         frequency_fetch = {'hourly': mt.Hourly,
@@ -55,7 +56,8 @@ class StationModelPlot:
     def custom_file_read(self):
         """
 
-        :return: A tuple containing Data Frame of Weather Data, list of column names
+        :return: Tuple of (DataFrame, List)
+                 containing DataFrame of weather data and columns values of the data as list
         """
         supported_types = ['nc', 'xml', 'txt', 'csv']
         extension_read = {'nc': xr.open_dataset,
@@ -171,7 +173,14 @@ class StationModelPlot:
 
     @staticmethod
     def get_abbreviations_from_file(data: dict):
+        """
 
+        Args:
+            data: Archived Nested Dictionary containing Multiple dictionaries used in the program
+
+        Returns: A single Dictionary
+
+        """
         for iter1 in data:
             if 'station_id' in iter1:
                 if isinstance(iter1['station_id'], list):
@@ -180,6 +189,14 @@ class StationModelPlot:
 
     @staticmethod
     def get_meteo_codes_from_file(data):
+        """
+
+        Args:
+            data: Archived Nested Dictionary containing Multiple dictionaries used in the program
+
+        Returns: A single Dictionary
+
+        """
         for iter1 in data:
             if 1 in iter1:
                 meteostat_weather_codes = iter1
@@ -187,6 +204,14 @@ class StationModelPlot:
 
     @staticmethod
     def get_plotting_dictionary(data):
+        """
+
+        Args:
+            data: Archived Nested Dictionary containing Multiple dictionaries used in the program
+
+        Returns: A single Dictionary
+
+        """
         for iter1 in data:
             if 'station_id' in iter1:
                 if isinstance(iter1['station_id'], str):
@@ -195,7 +220,15 @@ class StationModelPlot:
 
     @staticmethod
     def _get_pressure_change(p_curr, p_prev):
+        """
 
+        Args:
+            p_curr: Current Pressure Value : integer
+            p_prev: Previous Pressure Value : integer
+
+        Returns:
+
+        """
         p_diff = p_curr - p_prev
         if p_diff > 0:
             return '-'
@@ -205,11 +238,31 @@ class StationModelPlot:
 
     @staticmethod
     def get_pressure_difference(p_curr, p_prev):
+        """
+
+        Args:
+            p_curr: Current Pressure Value : integer
+            p_prev: Previous Pressure Value : integer
+
+        Returns:
+
+        """
         p_diff = p_curr - p_prev
         return p_diff
     @staticmethod
     def get_previous_pressure_values(time_stamp_row_index: list, fetched_data_columns, abbreviations: dict,
                                      fetched_data):
+        """
+
+        Args:
+            time_stamp_row_index: A list containing Index value of Time Stamp
+            fetched_data_columns: A list Containing Column Values of the DataFrame
+            abbreviations: A Dictionary containing Key to validate Abbreviation
+            fetched_data: A DataFrame containing Weather Values
+
+        Returns: A list containing Pressure Values
+
+        """
         previous_pressure_values = list()
         for iter1 in abbreviations['pressure']:
             if iter1 in fetched_data_columns:
@@ -228,7 +281,7 @@ class StationModelPlot:
         """
 
         :param pressure_values: A list of Pressure values since last 3 hours
-        :return: pressure_change_symbol: str, pressure_diff: int, pressure_tend: int
+        :return: pressure_change_symbol: str, pressure_diff: str, pressure_tend: int
         """
         if len(pressure_values) == 4:
             current_pressure = pressure_values[3]
@@ -269,10 +322,20 @@ class StationModelPlot:
 
             return pressure_change_symbol, abs(pressure_diff), pressure_tend
         else:
-            return '', None
+            return '', ''
 
     @staticmethod
     def get_pressure_values_to_plot(pressure_values_to_plot, plot_data: dict):
+        """
+
+        Args:
+            pressure_values_to_plot: A list containing Previous Pressure Values
+            plot_data: A Dictionary of validated Weather Parameters and their respective Values
+
+        Returns: An Updated Dictionary to plot data with Pressure Parameters, namely(Pressure_Change, Pressure Difference, Pressure_tendency)
+         and their Values
+
+        """
         if len(pressure_values_to_plot) == 3:
             if pressure_values_to_plot[0] != '':
                 plot_data['pressure_change'] = pressure_values_to_plot[0]
@@ -287,6 +350,17 @@ class StationModelPlot:
 
     @staticmethod
     def meteostat_weather_codes_conversion(plot_data: dict, st_id: str, meteostat_weather_code_map):
+        """
+
+        Args:
+            plot_data: A Dictionary of validated Weather Parameters and their respective Values
+            st_id: Station_ID of the Fetched Data
+            meteostat_weather_code_map: A Dictionary Containing Weather Code Conversion Map for Meteostat Weather codes
+
+        Returns: An Updated Dictionary to plot data with Pressure Parameters, namely(Pressure_Change, Pressure Difference, Pressure_tendency)
+         and their Values
+
+        """
         plot_data['station_id'] = st_id
         meteo_weather_code = plot_data['present_weather'] if plot_data['present_weather'] >= 0 else 0
         if meteo_weather_code in meteostat_weather_code_map:
@@ -299,6 +373,12 @@ class StationModelPlot:
 
     @staticmethod
     def get_input_for_data_source():
+        """
+
+        Returns: A Data Frame of Weather Data, A list of Columns of the DataFrame, The User Selected Method for Data source,
+                Station_ID as a String
+
+        """
         obtain_method = {'fetch_data': 'Enter Valid Station ID to fetch data:\t',
                          'upload_data_file': 'Enter Path to file or File as object:\t'
                          }
@@ -326,6 +406,16 @@ class StationModelPlot:
 
     @staticmethod
     def get_time_stamp_data(abbreviations: dict, fetched_data, fetched_data_columns: list):
+        """
+
+        Args:
+            abbreviations: A Dictionary containing Key to validate Abbreviation
+            fetched_data: A DataFrame containing Weather Values
+            fetched_data_columns: A list Containing Column Values of the DataFrame
+
+        Returns: A Dictionary of Key, Value a pair of Parameter and their values and a list of Index Value
+
+        """
         for iter1 in abbreviations['date_time']:
             timestamp_column = iter1
             if timestamp_column in fetched_data_columns:
@@ -345,6 +435,18 @@ class StationModelPlot:
     @staticmethod
     def get_previous_weather_value(time_stamp_row_index: list, fetched_data_columns, abbreviations: dict, fetched_data,
                                    plot_data):
+        """
+        Args:
+            time_stamp_row_index: A list containing Index value of Time Stamp
+            fetched_data_columns: A list Containing Column Values of the DataFrame
+            abbreviations: A Dictionary containing Key to validate Abbreviation
+            fetched_data: A DataFrame containing Weather Values
+            plot_data: A Dictionary of validated Weather Parameters and their respective Values
+
+        Returns: An Updated Dictionary to plot data with Pressure Parameters, namely(Pressure_Change, Pressure Difference, Pressure_tendency)
+         and their Values
+
+        """
         for iter1 in abbreviations['present_weather']:
             if iter1 in fetched_data_columns:
                 if len(time_stamp_row_index) > 0 and (time_stamp_row_index[0] - 3) >= 0:
