@@ -13,17 +13,23 @@ def main():
     valid_params['date_time'] = param_abbrvs['date_time']
     valid_params['pressure'] = param_abbrvs['pressure']
     valid_params['present_weather'] = param_abbrvs['present_weather']
-    usr_input = sm.get_input_for_data_source()
-    if len(usr_input) > 3:
-        fetched_data = usr_input[0]
-        fetched_data_cols = usr_input[1]
-        data_src_inp = usr_input[2]
-        station_id = usr_input[3]
-    else:
-        fetched_data = usr_input[0]
-        fetched_data_cols = usr_input[1]
-        data_src_inp = usr_input[2]
-    timestamp_data, row_index = sm.get_time_stamp_data(valid_params, fetched_data, fetched_data_cols)
+    while True:
+        try:
+            usr_input = sm.get_input_for_data_source()
+            if len(usr_input) > 3:
+                fetched_data = usr_input[0]
+                fetched_data_cols = usr_input[1]
+                data_src_inp = usr_input[2]
+                station_id = usr_input[3]
+            else:
+                fetched_data = usr_input[0]
+                fetched_data_cols = usr_input[1]
+                data_src_inp = usr_input[2]
+            timestamp_data, row_index = sm.get_time_stamp_data(valid_params, fetched_data, fetched_data_cols)
+            break
+        except Exception as e:
+            print(e)
+            continue
     plot_data = sm.parameter_validation(timestamp_data, fetched_data_cols, param_abbrvs)
     print(plot_data)
     past_pres_vals = sm.get_previous_pressure_values(row_index, fetched_data_cols, valid_params, fetched_data)
