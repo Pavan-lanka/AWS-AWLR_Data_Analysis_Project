@@ -152,11 +152,11 @@ class StationModelPlot:
 
         name = 'Station_model.jpeg'
         cwd = os.getcwd()
-        file_path = cwd + '/data/' + name
+        file_path = cwd + '/data/'
         plt.axis('off')
-        plt.savefig(file_path, dpi=100)
+        plt.savefig(file_path+name, dpi=100)
 
-        return path
+        return file_path+name
 
     @staticmethod
     def get_time_stamp(time_stamp_string):
@@ -462,8 +462,8 @@ class StationModelPlot:
     @staticmethod
     def get_station_names(station_id):
         cwd = os.getcwd()
-        file_path = cwd + 'data/test/station_ids.ods'
-        df = read_ods(file_path, 1, columns=["Region", "station_name", "st_identifier"])
+        file_path = '/data/test/station_ids.ods'
+        df = read_ods(cwd+file_path, 1, columns=["Region", "station_name", "st_identifier"])
         if len(station_id) > 0:
             for val in df['st_identifier']:
                 if val == station_id:

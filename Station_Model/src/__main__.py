@@ -49,8 +49,8 @@ def main():
 
 if __name__ == '__main__':
     cwd = os.getcwd()
-    file_path = cwd + '/data/my_dicts.pkl'
-    with open(file_path, 'rb') as f:
+    file_path = '/data/my_dicts.pkl'
+    with open(cwd+file_path, 'rb') as f:
         archived_data = pickle.load(f)
     path_to_model = main()
     cv2.waitKey(5)
