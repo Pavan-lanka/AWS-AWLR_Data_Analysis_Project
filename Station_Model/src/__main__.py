@@ -43,7 +43,6 @@ def main():
         station_id = plot_data['station_id']
     plot_data['station_id'] = sm.get_station_names(station_id)
     print(plot_data['station_id'])
-    print(plt_data)
     path = sm.plot_station_model(plot_data, plt_data)
     return path
 
