@@ -153,7 +153,7 @@ class StationModelPlot:
         az_logo = plt.imread(path1)
         ap_logo = plt.imread(path2)
         extent1 = [-8, -5.5, 6.5, 8]
-        extent2 = [6.5, 8, 6, 7.9]
+        extent2 = [5, 8, 6, 8]
         plt.imshow(az_logo, extent=extent1, aspect='equal')
         plt.imshow(ap_logo, extent=extent2, aspect='equal')
 
