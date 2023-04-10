@@ -151,9 +151,10 @@ class StationModelPlot:
                 eval(plot_dictionary[key])
 
         name = 'Station_model.jpeg'
-        path = os.path.abspath(name)
+        cwd = os.getcwd()
+        file_path = cwd + '/data/' + name
         plt.axis('off')
-        plt.savefig(path, dpi=100)
+        plt.savefig(file_path, dpi=100)
 
         return path
 
@@ -460,7 +461,8 @@ class StationModelPlot:
 
     @staticmethod
     def get_station_names(station_id):
-        file_path = '/home/hp/PycharmProjects/AWS-AWLR_Data_Analysis_Project/Station_Model/data/test/station_ids.ods'
+        cwd = os.getcwd()
+        file_path = cwd + 'data/test/station_ids.ods'
         df = read_ods(file_path, 1, columns=["Region", "station_name", "st_identifier"])
         if len(station_id) > 0:
             for val in df['st_identifier']:

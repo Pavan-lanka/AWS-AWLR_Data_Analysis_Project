@@ -48,8 +48,8 @@ def main():
 
 
 if __name__ == '__main__':
-
-    file_path = '/home/hp/PycharmProjects/AWS-AWLR_Data_Analysis_Project/Station_Model/data/my_dicts.pkl'
+    cwd = os.getcwd()
+    file_path = cwd + '/data/my_dicts.pkl'
     with open(file_path, 'rb') as f:
         archived_data = pickle.load(f)
     path_to_model = main()
