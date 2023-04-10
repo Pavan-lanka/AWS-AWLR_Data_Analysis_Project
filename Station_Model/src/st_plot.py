@@ -132,6 +132,16 @@ class StationModelPlot:
         station_square = plt.Rectangle((-6, -6), 12, 12, fc='white', ec="k")
         # ax.set_aspect()
         ax.add_patch(station_square)
+        logo_2 = "April_logo.png"
+        logo_1 = "Azista_logo.png"
+        path1 = os.path.abspath(logo_1)
+        path2 = os.path.abspath(logo_2)
+        az_logo = plt.imread(path1)
+        ap_logo = plt.imread(path2)
+        extent1 = [-8, -5.5, 6.5, 8]
+        extent2 = [6.5, 8, 6, 7.9]
+        plt.imshow(az_logo, extent=extent1, aspect='equal')
+        plt.imshow(ap_logo, extent=extent2, aspect='equal')
 
         for key, value in data.items():
             if key in plot_dictionary:
