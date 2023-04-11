@@ -249,9 +249,9 @@ class StationModelPlot:
         """
         p_diff = p_curr - p_prev
         if p_diff > 0:
-            return '-'
-        elif p_diff < 0:
             return '+'
+        elif p_diff < 0:
+            return '-'
         return '±'
 
     @staticmethod
@@ -291,7 +291,7 @@ class StationModelPlot:
                 if temp_var >= 0:
                     previous_pressure_values = fetched_data.loc[temp_var:time_stamp_row_index[0], iter1]
                     previous_pressure_values = previous_pressure_values.tolist()
-                    previous_pressure_values = [int(iter1) for iter1 in previous_pressure_values]
+                    previous_pressure_values = [int(iter2) for iter2 in previous_pressure_values]
                 else:
                     break
         return previous_pressure_values
@@ -302,8 +302,8 @@ class StationModelPlot:
         Args:
             pressure_values(list): A list containing Previous Pressure Values
 
-        Returns(tuple):
-                        A tuple containing validated Pressure values(pressure_change_symbol, pressure_diff, pressure_tendency)
+        Returns(tuple): A tuple containing validated Pressure values(pressure_change_symbol, pressure_diff,
+        pressure_tendency)
 
         """
         if len(pressure_values) == 4:
@@ -342,10 +342,11 @@ class StationModelPlot:
             elif pressure_3hr_ago - current_pressure > 1 and (
                     pressure_1hr_ago - current_pressure >= 3 and pressure_2hr_ago - pressure_1hr_ago >= 3):
                 pressure_tend = 8
+            else:
+                pressure_tend = 4
+                warnings.warn('Pressure Tendency Value is Incorrect due to insufficient data')
 
             return pressure_change_symbol, abs(pressure_diff), pressure_tend
-        else:
-            return '', ''
 
     @staticmethod
     def get_pressure_values_to_plot(pressure_values_to_plot, plot_data: dict):
