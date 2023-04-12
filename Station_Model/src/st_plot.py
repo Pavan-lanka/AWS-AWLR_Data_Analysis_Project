@@ -162,7 +162,7 @@ class StationModelPlot:
                 if key in plot_dictionary:
                     eval(plot_dictionary[key])
         except Exception as e:
-            warnings.warn(str(e)+ f'\n cannot plot {key}')
+            warnings.warn(str(e) + f'\n cannot plot {key}')
         name = 'Station_model.jpeg'
         cwd = os.getcwd()
         file_path = cwd + '/data/'
@@ -358,9 +358,8 @@ class StationModelPlot:
             pressure_values_to_plot(Tuple): A tuple containing Validated Pressure Values to plot
             plot_data(dict): A Dictionary of validated Weather Parameters and their respective Values
 
-        Returns(dict):
-                    An Updated Dictionary to plot data with Pressure Parameters, namely(Pressure_Change, Pressure Difference, Pressure_tendency)
-                    and their Values
+        Returns(dict): An Updated Dictionary to plot data with Pressure Parameters, namely(Pressure_Change,
+        Pressure Difference, Pressure_tendency) and their Values
 
         """
         if pressure_values_to_plot is not None:
