@@ -157,17 +157,19 @@ class StationModelPlot:
         plt.imshow(az_logo, extent=extent1, aspect='equal')
         plt.imshow(ap_logo, extent=extent2, aspect='equal')
 
-        for key, value in data.items():
-            if key in plot_dictionary:
-                eval(plot_dictionary[key])
-
+        try:
+            for key, value in data.items():
+                if key in plot_dictionary:
+                    eval(plot_dictionary[key])
+        except Exception as e:
+            warnings.warn(str(e)+ f'\n cannot plot {key}')
         name = 'Station_model.jpeg'
         cwd = os.getcwd()
         file_path = cwd + '/data/'
         plt.axis('off')
-        plt.savefig(file_path+name, dpi=100)
+        plt.savefig(file_path + name, dpi=100)
 
-        return file_path+name
+        return file_path + name
 
     @staticmethod
     def get_time_stamp(time_stamp_string):
@@ -361,17 +363,20 @@ class StationModelPlot:
                     and their Values
 
         """
-        if len(pressure_values_to_plot) == 3:
-            if pressure_values_to_plot[0] != '':
+        if pressure_values_to_plot is not None:
+            if len(pressure_values_to_plot) == 3:
+                if pressure_values_to_plot[0] != '':
+                    plot_data['pressure_change'] = pressure_values_to_plot[0]
+                if pressure_values_to_plot[1] is not None:
+                    plot_data['pressure_difference'] = pressure_values_to_plot[1]
+                if pressure_values_to_plot[2] >= 0:
+                    plot_data['pressure_tendency'] = pressure_values_to_plot[2]
+            elif len(pressure_values_to_plot) == 2:
                 plot_data['pressure_change'] = pressure_values_to_plot[0]
-            if pressure_values_to_plot[1] is not None:
                 plot_data['pressure_difference'] = pressure_values_to_plot[1]
-            if pressure_values_to_plot[2] >= 0:
-                plot_data['pressure_tendency'] = pressure_values_to_plot[2]
-        elif len(pressure_values_to_plot) == 2:
-            plot_data['pressure_change'] = pressure_values_to_plot[0]
-            plot_data['pressure_difference'] = pressure_values_to_plot[1]
-        return plot_data
+            return plot_data
+        else:
+            return plot_data
 
     @staticmethod
     def meteostat_weather_codes_conversion(station_id, plot_data: dict, meteostat_weather_code_map):
@@ -501,7 +506,7 @@ class StationModelPlot:
         """
         cwd = os.getcwd()
         file_path = '/data/test/station_ids.ods'
-        df = read_ods(cwd+file_path, 1, columns=["Region", "station_name", "st_identifier"])
+        df = read_ods(cwd + file_path, 1, columns=["Region", "station_name", "st_identifier"])
         if len(station_id) > 0:
             for val in df['st_identifier']:
                 if val == station_id:
